@@ -1,10 +1,12 @@
 import java.awt.Color;
+import java.util.ArrayList;
 
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
 import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
+import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.gui.Value2DDisplay;
 
 /**
@@ -36,6 +38,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		private RabbitsGrassSimulationSpace space;
 		
 		private DisplaySurface surface;
+		
+		private ArrayList agentList;
 	
 		public static void main(String[] args) {
 			
@@ -61,6 +65,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			surface = new DisplaySurface(this, "Rabbits love grass");
 			registerDisplaySurface("Rabbits love grass", surface);
 			
+			agentList = new ArrayList();
 		}
 
 		public void begin() {
@@ -74,6 +79,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		public void buildModel(){
 			space = new RabbitsGrassSimulationSpace(x,y);
 			space.spreadGrass(grassGrowth);
+			for (int i=0; i<numAgents; i++)
+				addNewAgent();
 		}
 
 		public void buildSchedule(){
@@ -86,7 +93,16 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			}
 			map.mapColor(0, Color.WHITE);
 			Value2DDisplay displayGrass = new Value2DDisplay(space.getCurrentGrassSpace(), map);
+			Object2DDisplay displayAgents = new Object2DDisplay(space.getCurrentAgentSpace());
+			displayAgents.setObjectList(agentList);
 			surface.addDisplayable(displayGrass, "Grass");
+			surface.addDisplayable(displayAgents, "Rabbits");
+		}
+		
+		private void addNewAgent(){
+			RabbitsGrassSimulationAgent agent = new RabbitsGrassSimulationAgent();
+			agentList.add(agent);
+			space.addAgent(agent);
 		}
 		
 		public Schedule getSchedule() {
