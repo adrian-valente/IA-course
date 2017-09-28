@@ -13,34 +13,53 @@ import uchicago.src.sim.engine.SimModelImpl;
 
 public class RabbitsGrassSimulationModel extends SimModelImpl {		
 
+		private Schedule schedule;
+		private int numAgents;
+	
 		public static void main(String[] args) {
 			
 			System.out.println("Rabbit skeleton");
 			
 		}
-
-		public void begin() {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public String[] getInitParam() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
+		
 		public String getName() {
-			// TODO Auto-generated method stub
-			return null;
+			return "My first Repast Model";
 		}
-
-		public Schedule getSchedule() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
+		
 		public void setup() {
 			// TODO Auto-generated method stub
 			
 		}
+
+		public void begin() {
+			buildModel();
+			buildSchedule();
+			buildDisplay();	
+		}
+		
+		public void buildModel(){
+		}
+
+		public void buildSchedule(){
+		}
+
+		public void buildDisplay(){
+		}
+		
+		public Schedule getSchedule() {
+			return schedule;
+		}
+		
+		public int getNumAgents() {
+			return numAgents;
+		}
+		
+		public void setNumAgents(int na) {
+			numAgents = na;
+		}
+
+		public String[] getInitParam() {
+			String[] initParam = {"numAgents"};
+			return initParam;
+		}	
 }
