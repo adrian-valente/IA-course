@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.util.ArrayList;
 
+import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.engine.SimModelImpl;
@@ -8,6 +9,7 @@ import uchicago.src.sim.gui.ColorMap;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.gui.Value2DDisplay;
+import uchicago.src.sim.util.SimUtilities;
 
 /**
  * Class that implements the simulation model for the rabbits grass
@@ -20,39 +22,34 @@ import uchicago.src.sim.gui.Value2DDisplay;
 
 
 public class RabbitsGrassSimulationModel extends SimModelImpl {		
-
+		//Default values
 		private static final int XSIZE = 20;
 		private static final int YSIZE = 20;
 		private static final int NUMAGENTS = 10;
-		private static final int BIRTH_THRESHOLD = 3;
+		private static final int BIRTH_THRESHOLD = 30;
 		private static final int GRASS_GROWTH_RATE = 5;
 		
+		//Parameters
 		private int x = XSIZE;
 		private int y = YSIZE;
 		private int numAgents = NUMAGENTS;
 		private int birthThreshold = BIRTH_THRESHOLD;
 		private int grassGrowth = GRASS_GROWTH_RATE;
 		
+		//Objects
 		private Schedule schedule;
-		
 		private RabbitsGrassSimulationSpace space;
-		
 		private DisplaySurface surface;
-		
 		private ArrayList agentList;
 	
+		
 		public static void main(String[] args) {
-			
 			SimInit init = new SimInit();
 			RabbitsGrassSimulationModel model = new RabbitsGrassSimulationModel();
 			init.loadModel(model, "", false);
 			System.out.println("Rabbit skeleton");
-			
 		}
 		
-		public String getName() {
-			return "My first Repast Model";
-		}
 		
 		public void setup() {
 			space = null;
@@ -66,6 +63,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			registerDisplaySurface("Rabbits love grass", surface);
 			
 			agentList = new ArrayList();
+			schedule = new Schedule(1);
 		}
 
 		public void begin() {
@@ -84,8 +82,38 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 
 		public void buildSchedule(){
+			class RabbitsGrassStep extends BasicAction{
+				public void execute(){
+					SimUtilities.shuffle(agentList);
+					for (int i=0;i<agentList.size();i++){
+						RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent) agentList.get(i);
+						a.step();
+					}
+					space.spreadGrass(grassGrowth);
+					populationStep();
+					surface.updateDisplay();
+				}
+			}
+			
+			schedule.scheduleActionBeginning(0, new RabbitsGrassStep());
 		}
 
+		
+		public void populationStep(){
+			for (int i=0;i<agentList.size();i++){
+				RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentList.get(i);
+				int e = a.getEnergy();
+				if (e<0){
+					space.removeAgentAt(a.getX(), a.getY());
+					agentList.remove(i);
+				}
+				if (e>birthThreshold){
+					addNewAgent();
+				}
+			}
+		}
+		
+		
 		public void buildDisplay(){
 			ColorMap map = new ColorMap();
 			for(int i = 1; i < 16; ++i) {
@@ -103,6 +131,12 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			RabbitsGrassSimulationAgent agent = new RabbitsGrassSimulationAgent();
 			agentList.add(agent);
 			space.addAgent(agent);
+			agent.setSpace(space);
+		}
+		
+		/***** GETTERS & SETTERS ******/
+		public String getName() {
+			return "My first Repast Model";
 		}
 		
 		public Schedule getSchedule() {

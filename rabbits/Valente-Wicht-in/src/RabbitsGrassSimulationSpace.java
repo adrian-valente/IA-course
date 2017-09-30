@@ -9,6 +9,7 @@ import uchicago.src.sim.space.Object2DGrid;
 public class RabbitsGrassSimulationSpace {
 	private Object2DGrid grassSpace;
 	private Object2DGrid agentSpace;
+	private int X_SIZE,Y_SIZE;
 	
 	public RabbitsGrassSimulationSpace(int x, int y) {
 		grassSpace = new Object2DGrid(x,y);
@@ -18,6 +19,8 @@ public class RabbitsGrassSimulationSpace {
 				grassSpace.putObjectAt(i, j, new Integer(0));
 			}
 		}
+		X_SIZE = x;
+		Y_SIZE = y;
 	}
 	
 	public void spreadGrass(int grass) {
@@ -65,5 +68,36 @@ public class RabbitsGrassSimulationSpace {
 			count++;
 		}
 		return success;
+	}
+	
+	public boolean moveAgentAt(int x, int y, int newX, int newY){
+	    boolean retVal = false;
+	    newX = newX % X_SIZE;
+	    if (newX<0)
+	    	newX+=X_SIZE;
+	    newY = newY % Y_SIZE;
+	    if (newY<0)
+	    	newY+=Y_SIZE;
+	    System.out.println(newX+"  "+newY);
+	    if(!isCellOccupied(newX, newY)){
+	      RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentSpace.getObjectAt(x, y);
+	      removeAgentAt(x,y);
+	      a.setXY(newX, newY);
+	      agentSpace.putObjectAt(newX, newY, a);
+	      retVal = true;
+	    }
+	    return retVal;
+	  }
+	
+	public void removeAgentAt(int x, int y){
+		agentSpace.putObjectAt(x, y, null);
+	}
+	
+	public int eatGrassAt(int x, int y){
+		int grass = (int)grassSpace.getObjectAt(x, y);
+		if (grass!=0){
+			grassSpace.putObjectAt(x,y,grass-1);
+		}
+		return grass;
 	}
 }
