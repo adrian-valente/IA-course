@@ -78,13 +78,15 @@ public class RabbitsGrassSimulationSpace {
 	    newY = newY % Y_SIZE;
 	    if (newY<0)
 	    	newY+=Y_SIZE;
-	    System.out.println(newX+"  "+newY);
+	    //System.out.println(newX+"  "+newY+"  "+x+"  "+y);
 	    if(!isCellOccupied(newX, newY)){
 	      RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentSpace.getObjectAt(x, y);
-	      removeAgentAt(x,y);
-	      a.setXY(newX, newY);
-	      agentSpace.putObjectAt(newX, newY, a);
-	      retVal = true;
+	      if(a!=null) {
+	    	  removeAgentAt(x,y);
+		      a.setXY(newX, newY);
+		      agentSpace.putObjectAt(newX, newY, a);
+		      retVal = true;  
+	      }
 	    }
 	    return retVal;
 	  }
@@ -96,7 +98,7 @@ public class RabbitsGrassSimulationSpace {
 	public int eatGrassAt(int x, int y){
 		int grass = (int)grassSpace.getObjectAt(x, y);
 		if (grass!=0){
-			grassSpace.putObjectAt(x,y,grass-1);
+			grassSpace.putObjectAt(x,y,new Integer(0));
 		}
 		return grass;
 	}

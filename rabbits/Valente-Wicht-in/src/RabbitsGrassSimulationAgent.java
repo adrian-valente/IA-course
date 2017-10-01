@@ -1,6 +1,5 @@
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
-import uchicago.src.sim.space.Object2DGrid;
 
 import java.awt.Color;
 
@@ -13,18 +12,20 @@ import java.awt.Color;
 
 public class RabbitsGrassSimulationAgent implements Drawable {
 	
+	private final static int BIRTH_ENERGY = 10;
+	private final static int GRASS_ENERGY = 1;
+	private final static int ENERGY_LOSS = 1;
+	
 	private int x;
 	private int y;
 	private int energy;
 	private RabbitsGrassSimulationSpace space;
-	private final static int BIRTH_ENERGY = 20;
-	private final static int GRASS_ENERGY = 5;
-	private final static int ENERGY_LOSS = 1;
+	
 	
 	public RabbitsGrassSimulationAgent(){
-		x = -1;
-		y = -1;
-		energy = 5;
+		x = (int) (Math.random() * 20);
+		y = (int) (Math.random() * 20);
+		energy = BIRTH_ENERGY;
 	}
 
 	public void draw(SimGraphics G) {
@@ -55,7 +56,7 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 			}
 			i++;
 		}
-		System.out.println("Agent moved at "+x+"  "+y);
+		//System.out.println("Agent moved at "+x+"  "+y);
 		
 		//Eat the grass
 		energy += GRASS_ENERGY*space.eatGrassAt(x,y);
@@ -76,6 +77,14 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 	
 	public int getEnergy(){
 		return energy;
+	}
+	
+	public void setEnergy(int dEnergy) {
+		energy += dEnergy;
+	}
+	
+	public int getBirthEnergy() {
+		return BIRTH_ENERGY;
 	}
 	
 	public void setXY(int X, int Y){

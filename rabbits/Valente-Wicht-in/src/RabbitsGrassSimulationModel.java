@@ -25,9 +25,9 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		//Default values
 		private static final int XSIZE = 20;
 		private static final int YSIZE = 20;
-		private static final int NUMAGENTS = 10;
-		private static final int BIRTH_THRESHOLD = 30;
-		private static final int GRASS_GROWTH_RATE = 5;
+		private static final int NUMAGENTS = 20;
+		private static final int BIRTH_THRESHOLD = 12;
+		private static final int GRASS_GROWTH_RATE = 30;
 		
 		//Parameters
 		private int x = XSIZE;
@@ -40,7 +40,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		private Schedule schedule;
 		private RabbitsGrassSimulationSpace space;
 		private DisplaySurface surface;
-		private ArrayList agentList;
+		private ArrayList<RabbitsGrassSimulationAgent> agentList;
 	
 		
 		public static void main(String[] args) {
@@ -62,7 +62,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			surface = new DisplaySurface(this, "Rabbits love grass");
 			registerDisplaySurface("Rabbits love grass", surface);
 			
-			agentList = new ArrayList();
+			agentList = new ArrayList<RabbitsGrassSimulationAgent>();
 			schedule = new Schedule(1);
 		}
 
@@ -103,12 +103,13 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			for (int i=0;i<agentList.size();i++){
 				RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentList.get(i);
 				int e = a.getEnergy();
-				if (e<0){
+				if (e<=0){
 					space.removeAgentAt(a.getX(), a.getY());
 					agentList.remove(i);
 				}
 				if (e>birthThreshold){
 					addNewAgent();
+					a.setEnergy(- a.getBirthEnergy());
 				}
 			}
 		}
@@ -149,6 +150,38 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		public void setNumAgents(int na) {
 			numAgents = na;
+		}
+		
+		public int getX() {
+			return x;
+		}
+		
+		public void setX(int newX) {
+			x = newX;
+		}
+		
+		public int getY() {
+			return y;
+		}
+		
+		public void setY(int newY) {
+			y = newY;
+		}
+		
+		public int getBirthThreshold() {
+			return birthThreshold;
+		}
+		
+		public void setBirthThreshold(int newThreshold) {
+			birthThreshold = newThreshold;
+		}
+		
+		public int getGrassGrowth() {
+			return grassGrowth;
+		}
+		
+		public void setGrassGrowth(int newGrowth) {
+			grassGrowth = newGrowth;
 		}
 
 		public String[] getInitParam() {
