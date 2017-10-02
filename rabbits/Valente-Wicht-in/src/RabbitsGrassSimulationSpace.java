@@ -37,7 +37,7 @@ public class RabbitsGrassSimulationSpace {
 				sum = 0;
 			}
 			
-			grassSpace.putObjectAt(x, y, new Integer(sum+1));
+			grassSpace.putObjectAt(x, y, new Integer(Math.min(sum+1, 16)));
 		}
 	}
 
