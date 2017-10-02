@@ -1,0 +1,60 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage[top=0.8in, bottom=0.8in, left=0.8in, right=0.8in]{geometry}
+% Add other packages here %
+
+
+
+% Put your group number and names in the author field %
+\title{\bf Excercise 1.\\ Implementing a first Application in RePast: A Rabbits Grass Simulation.}
+\author{Group \textnumero: Adrian Valente, Bruno Wicht}
+
+\begin{document}
+\maketitle
+
+\section{Implementation}
+
+\subsection{Assumptions}
+% Describe the assumptions of your world model and implementation (e.g. is the grass amount bounded in each cell) %
+As it was not mentionned, we decided to allow multiple grass unit to grow on the same cell. When a grass unit wants to grow where there is already a grass unit, the cell's energy goes to 2, and to n+1 when there is already n units of grass on that cell. We also decided to put a limit on the maximum number of grass units that can grow one the same cell and set this parameter to 16. But of course when a rabbit bumps on a cell where there are 16 units of grass, new grass will be able to grow on that cell. 
+\newline
+Then, as rabbits are very hungry, when one of them bumps onto a cell where there is some grass, he eats everything and let nothing for the other rabbits.
+\newline
+When a rabbit want to jump onto a cell where another rabbit stands, he's not allowed to jump and stays at his place.
+\newline 
+Each jump cost 1 unit of energy to rabbits and each unit of grass gives them 1 unit of energy, so if they jump on a cell containing n units of grass, they will gain n units of energy.
+\newline
+When a rabbit reach a specific level of energy, he can have a baby rabbit, but it costs him some energy. The newborn rabbit will get the same amount of energy at his birth his parent spend to get him alive. 
+
+\subsection{Implementation Remarks}
+% Provide important details about your implementation, such as handling of boundary conditions %
+
+\section{Results}
+% In this section, you study and describe how different variables (e.g. birth threshold, grass growth rate etc.) or combinations of variables influence the results. Different experiments with diffrent settings are described below with your observations and analysis
+
+\subsection{Experiment 1}
+
+\subsubsection{Setting}
+
+\subsubsection{Observations}
+% Elaborate on the observed results %
+
+\subsection{Experiment 2}
+
+\subsubsection{Setting}
+
+\subsubsection{Observations}
+% Elaborate on the observed results %
+
+\vdots
+
+\subsection{Experiment n}
+
+\subsubsection{Setting}
+
+\subsubsection{Observations}
+% Elaborate on the observed results %
+
+\end{document}
