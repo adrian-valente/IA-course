@@ -33,7 +33,7 @@ When a rabbit reaches a specific level of energy, he can have a baby rabbit, but
 The implementation was relatively straightforward, and we mainly followed the framework given by Pr. Murphy. However a few things are worth to be noted:
 \begin{enumerate}
 \item We handled boundaries by modular operations, thus making the space in which rabbits evolve equivalent to a 2-dimensional torus.
-\item We handled collisions by trying a at most 8 random directions for each rabbit until a free cell is found. If no free cell is found in 8 trials, we decide to leave the rabbit in place. This is not perfect because nothing prevents a rabbit from trying 8 times the same occupied cells, even if a free one is nearby. 
+\item We handled collisions by trying at most 8 random directions for each rabbit until a free cell is found. If no free cell is found in 8 trials, we decide to leave the rabbit in place. This is not perfect because nothing prevents a rabbit from trying 8 times the same occupied cells, even if a free one is nearby. 
 \end{enumerate}
 Finally, let us note that we have fixed some parameters that have some importance: the amount of energy lost at each round for a rabbit is 1, and the amount gained by eating 1 unit of grass is 1 as well.
 
@@ -57,7 +57,7 @@ Let us see how our rabbits do when food is scarce. We maintain all parameters at
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
-This time we observe that the rabbits do not survive: they disappear very quickly. Note that this value of 20 is not a random choice: we have observed that for $g \leq 21$ oscillations appear. They have a low period and high amplitude at first and then become quicker and smaller as $g$ increases. (Of course this value of 21 depends on $b$). 
+This time we observe that the rabbits do not survive: they disappear very quickly. Note that this value of 20 is not a random choice: we have observed that for $21 \leq g$ oscillations appear. They have a low period and high amplitude at first and then become quicker and smaller as $g$ increases. (Of course this value of 21 depends on $b$). 
 
 
 \subsection{Experiment 3}
