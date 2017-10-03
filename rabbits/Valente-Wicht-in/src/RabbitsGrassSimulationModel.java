@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.util.ArrayList;
 
+import uchicago.src.reflector.RangePropertyDescriptor;
 import uchicago.src.sim.analysis.DataSource;
 import uchicago.src.sim.analysis.OpenSequenceGraph;
 import uchicago.src.sim.analysis.Sequence;
@@ -77,6 +78,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 		
 		
+		@SuppressWarnings("unchecked")
 		public void setup() {
 			//Tearing down if necessary
 			space = null;
@@ -102,6 +104,20 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			registerDisplaySurface("Rabbits love grass", surface);
 			this.registerMediaProducer("Plot", curNumRabbits);
 			this.registerMediaProducer("Plot", curNumGrass);
+			
+			
+			//Create the sliders for each parameter the user can set
+			RangePropertyDescriptor dAgents = new RangePropertyDescriptor("NumAgents", 0, 40, 8);
+			descriptors.put("NumAgents", dAgents);
+			RangePropertyDescriptor dX = new RangePropertyDescriptor("X", 0, 30, 6);
+			descriptors.put("X", dX);
+			RangePropertyDescriptor dY = new RangePropertyDescriptor("Y", 0, 30, 6);
+			descriptors.put("Y", dY);
+			RangePropertyDescriptor dGrass = new RangePropertyDescriptor("GrassGrowth", 0, 60, 12);
+			descriptors.put("GrassGrowth", dGrass);
+			RangePropertyDescriptor dBirth = new RangePropertyDescriptor("BirthThreshold", 5, 15, 2);
+			descriptors.put("BirthThreshold", dBirth);
+			
 		}
 
 		public void begin() {
