@@ -10,6 +10,8 @@ public class RabbitsGrassSimulationSpace {
 	private Object2DGrid grassSpace;
 	private Object2DGrid agentSpace;
 	private int X_SIZE,Y_SIZE;
+	private static int totalGrass = 0;
+	private static int totalRabbits = 0;
 	
 	public RabbitsGrassSimulationSpace(int x, int y) {
 		grassSpace = new Object2DGrid(x,y);
@@ -38,6 +40,7 @@ public class RabbitsGrassSimulationSpace {
 			}
 			
 			grassSpace.putObjectAt(x, y, new Integer(Math.min(sum+1, 16)));
+			totalGrass += (sum<16)? 1 : 0;
 		}
 	}
 
@@ -47,6 +50,14 @@ public class RabbitsGrassSimulationSpace {
 	
 	public Discrete2DSpace getCurrentAgentSpace(){
 		return agentSpace;
+	}
+	
+	public int getTotalGrass(){
+		return totalGrass;
+	}
+	
+	public int getTotalRabbits(){
+		return totalRabbits;
 	}
 	
 	public boolean isCellOccupied(int x, int y){
@@ -64,6 +75,7 @@ public class RabbitsGrassSimulationSpace {
 				agentSpace.putObjectAt(x,y,agent);
 				agent.setXY(x,y);
 				success = true;
+				totalRabbits++;
 			}
 			count++;
 		}
@@ -82,7 +94,7 @@ public class RabbitsGrassSimulationSpace {
 	    if(!isCellOccupied(newX, newY)){
 	      RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentSpace.getObjectAt(x, y);
 	      if(a!=null) {
-	    	  removeAgentAt(x,y);
+	    	  agentSpace.putObjectAt(x, y, null);
 		      a.setXY(newX, newY);
 		      agentSpace.putObjectAt(newX, newY, a);
 		      retVal = true;  
@@ -93,6 +105,7 @@ public class RabbitsGrassSimulationSpace {
 	
 	public void removeAgentAt(int x, int y){
 		agentSpace.putObjectAt(x, y, null);
+		totalRabbits -= 1;
 	}
 	
 	public int eatGrassAt(int x, int y){
@@ -100,6 +113,7 @@ public class RabbitsGrassSimulationSpace {
 		if (grass!=0){
 			grassSpace.putObjectAt(x,y,new Integer(0));
 		}
+		totalGrass -= grass;
 		return grass;
 	}
 }

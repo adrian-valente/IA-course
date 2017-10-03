@@ -1,6 +1,9 @@
 import java.awt.Color;
 import java.util.ArrayList;
 
+import uchicago.src.sim.analysis.DataSource;
+import uchicago.src.sim.analysis.OpenSequenceGraph;
+import uchicago.src.sim.analysis.Sequence;
 import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.Schedule;
 import uchicago.src.sim.engine.SimInit;
@@ -41,6 +44,29 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		private RabbitsGrassSimulationSpace space;
 		private DisplaySurface surface;
 		private ArrayList<RabbitsGrassSimulationAgent> agentList;
+		private OpenSequenceGraph curNumRabbits;
+		private OpenSequenceGraph curNumGrass;
+		
+		//Inner classes
+		class RabbitsInSpace implements DataSource, Sequence {
+			public Object execute(){
+				return new Double(getSValue());
+			}
+			
+			public double getSValue(){
+				return (double)space.getTotalRabbits();
+			}
+		}
+		
+		class GrassInSpace implements DataSource, Sequence {
+			public Object execute(){
+				return new Double(getSValue());
+			}
+			
+			public double getSValue(){
+				return (double)space.getTotalGrass();
+			}
+		}
 	
 		
 		public static void main(String[] args) {
@@ -52,18 +78,30 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		
 		public void setup() {
+			//Tearing down if necessary
 			space = null;
-			
 			if(surface != null) {
 				surface.dispose();
 			}
 			surface = null;
+			if (curNumRabbits!=null)
+				curNumRabbits.dispose();
+			curNumRabbits = null;
+			if (curNumGrass!=null)
+				curNumGrass.dispose();
+			curNumGrass = null;
 			
+			//Create objects
 			surface = new DisplaySurface(this, "Rabbits love grass");
-			registerDisplaySurface("Rabbits love grass", surface);
-			
 			agentList = new ArrayList<RabbitsGrassSimulationAgent>();
 			schedule = new Schedule(1);
+			curNumRabbits = new OpenSequenceGraph("Number of Rabbits in Space",this);
+			curNumGrass = new OpenSequenceGraph("Amount of Grass in Space", this);
+			
+			//Register Displays
+			registerDisplaySurface("Rabbits love grass", surface);
+			this.registerMediaProducer("Plot", curNumRabbits);
+			this.registerMediaProducer("Plot", curNumGrass);
 		}
 
 		public void begin() {
@@ -72,6 +110,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			buildDisplay();	
 			
 			surface.display();
+			curNumRabbits.display();
+			curNumGrass.display();
 		}
 		
 		public void buildModel(){
@@ -82,6 +122,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		}
 
 		public void buildSchedule(){
+			//Main action: move rabbits, grow grass...
 			class RabbitsGrassStep extends BasicAction{
 				public void execute(){
 					SimUtilities.shuffle(agentList);
@@ -94,8 +135,16 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 					surface.updateDisplay();
 				}
 			}
-			
 			schedule.scheduleActionBeginning(0, new RabbitsGrassStep());
+			
+			//Updating graphs action
+			class UpdateGraphsStep extends BasicAction{
+				public void execute(){
+					curNumGrass.step();
+					curNumRabbits.step();
+				}
+			}
+			schedule.scheduleActionAtInterval(10, new UpdateGraphsStep());
 		}
 
 		
@@ -126,6 +175,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			displayAgents.setObjectList(agentList);
 			surface.addDisplayable(displayGrass, "Grass");
 			surface.addDisplayable(displayAgents, "Rabbits");
+			curNumRabbits.addSequence("Rabbits in Space", new RabbitsInSpace());
+			curNumGrass.addSequence("Grass in Space", new GrassInSpace());
 		}
 		
 		private void addNewAgent(){
