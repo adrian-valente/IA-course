@@ -39,8 +39,8 @@ public class RabbitsGrassSimulationSpace {
 				sum = 0;
 			}
 			
-			grassSpace.putObjectAt(x, y, new Integer(Math.min(sum+1, 16)));
-			totalGrass += (sum<16)? 1 : 0;
+			grassSpace.putObjectAt(x, y, new Integer(Math.min(sum+1, 15)));
+			totalGrass += (sum<15)? 1 : 0;
 		}
 	}
 
@@ -62,6 +62,11 @@ public class RabbitsGrassSimulationSpace {
 	
 	public boolean isCellOccupied(int x, int y){
 		return (agentSpace.getObjectAt(x,y)!=null);
+	}
+	
+	public void setup(){
+		totalRabbits = 0;
+		totalGrass = 0;
 	}
 	
 	public boolean addAgent(RabbitsGrassSimulationAgent agent){
@@ -90,7 +95,6 @@ public class RabbitsGrassSimulationSpace {
 	    newY = newY % Y_SIZE;
 	    if (newY<0)
 	    	newY+=Y_SIZE;
-	    //System.out.println(newX+"  "+newY+"  "+x+"  "+y);
 	    if(!isCellOccupied(newX, newY)){
 	      RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentSpace.getObjectAt(x, y);
 	      if(a!=null) {

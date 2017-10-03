@@ -56,7 +56,6 @@ public class RabbitsGrassSimulationAgent implements Drawable {
 			}
 			i++;
 		}
-		//System.out.println("Agent moved at "+x+"  "+y);
 		
 		//Eat the grass
 		energy += GRASS_ENERGY*space.eatGrassAt(x,y);

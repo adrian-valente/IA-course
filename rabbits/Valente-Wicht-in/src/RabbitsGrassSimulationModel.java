@@ -107,7 +107,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 			
 			
 			//Create the sliders for each parameter the user can set
-			RangePropertyDescriptor dAgents = new RangePropertyDescriptor("NumAgents", 0, 40, 8);
+			RangePropertyDescriptor dAgents = new RangePropertyDescriptor("NumAgents", 0, 60, 8);
 			descriptors.put("NumAgents", dAgents);
 			RangePropertyDescriptor dX = new RangePropertyDescriptor("X", 0, 30, 6);
 			descriptors.put("X", dX);
@@ -132,6 +132,7 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		public void buildModel(){
 			space = new RabbitsGrassSimulationSpace(x,y);
+			space.setup();
 			space.spreadGrass(grassGrowth);
 			for (int i=0; i<numAgents; i++)
 				addNewAgent();
@@ -149,6 +150,8 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 					space.spreadGrass(grassGrowth);
 					populationStep();
 					surface.updateDisplay();
+					System.out.println(agentList.size());
+					System.out.println(space.getTotalRabbits());
 				}
 			}
 			schedule.scheduleActionBeginning(0, new RabbitsGrassStep());
@@ -165,18 +168,23 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 
 		
 		public void populationStep(){
-			for (int i=0;i<agentList.size();i++){
+			//We have to be careful not to remove agents from the list at the same time we read it,
+			//and not to consider newly added agents in our loop...
+			ArrayList<RabbitsGrassSimulationAgent> toRemove = new ArrayList<RabbitsGrassSimulationAgent>();
+			int n = agentList.size();
+			for (int i=0;i<n;i++){
 				RabbitsGrassSimulationAgent a = (RabbitsGrassSimulationAgent)agentList.get(i);
 				int e = a.getEnergy();
 				if (e<=0){
 					space.removeAgentAt(a.getX(), a.getY());
-					agentList.remove(i);
-				}
+					toRemove.add(a);
+				} 
 				if (e>birthThreshold){
 					addNewAgent();
 					a.setEnergy(- a.getBirthEnergy());
 				}
 			}
+			agentList.removeAll(toRemove);
 		}
 		
 		
@@ -197,9 +205,10 @@ public class RabbitsGrassSimulationModel extends SimModelImpl {
 		
 		private void addNewAgent(){
 			RabbitsGrassSimulationAgent agent = new RabbitsGrassSimulationAgent();
-			agentList.add(agent);
-			space.addAgent(agent);
-			agent.setSpace(space);
+			if (space.addAgent(agent)){
+				agent.setSpace(space);
+				agentList.add(agent);
+			}
 		}
 		
 		/***** GETTERS & SETTERS ******/

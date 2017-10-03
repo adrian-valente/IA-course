@@ -18,43 +18,62 @@
 
 \subsection{Assumptions}
 % Describe the assumptions of your world model and implementation (e.g. is the grass amount bounded in each cell) %
-As it was not mentionned, we decided to allow multiple grass unit to grow on the same cell. When a grass unit wants to grow where there is already a grass unit, the cell's energy goes to 2, and to n+1 when there is already n units of grass on that cell. We also decided to put a limit on the maximum number of grass units that can grow one the same cell and set this parameter to 16. But of course when a rabbit bumps on a cell where there are 16 units of grass, new grass will be able to grow on that cell. 
+As it was not mentioned, we decided to allow multiple grass unit to grow on the same cell. When a grass unit wants to grow where there is already a grass unit, the cell's energy goes to 2, and to n+1 when there are already n units of grass on that cell. We also decided to put a limit on the maximum number of grass units that can grow on the same cell and set this parameter to 16. But of course when a rabbit bumps on a cell where there are 16 units of grass, new grass will be able to grow on that cell. 
 \newline
-Then, as rabbits are very hungry, when one of them bumps onto a cell where there is some grass, he eats everything and let nothing for the other rabbits.
+Then, as rabbits are very hungry, when one of them bumps onto a cell where there is some grass, he eats everything and lets nothing for the other rabbits.
 \newline
 When a rabbit want to jump onto a cell where another rabbit stands, he's not allowed to jump and stays at his place.
 \newline 
 Each jump cost 1 unit of energy to rabbits and each unit of grass gives them 1 unit of energy, so if they jump on a cell containing n units of grass, they will gain n units of energy.
 \newline
-When a rabbit reach a specific level of energy, he can have a baby rabbit, but it costs him some energy. The newborn rabbit will get the same amount of energy at his birth his parent spend to get him alive. 
+When a rabbit reaches a specific level of energy, he can have a baby rabbit, but it costs him some energy. The newborn rabbit will get the same amount of energy at his birth his parent spend to get him alive. 
 
 \subsection{Implementation Remarks}
 % Provide important details about your implementation, such as handling of boundary conditions %
+The implementation was relatively straightforward, and we mainly followed the framework given by Pr. Murphy. However a few things are worth to be noted:
+\begin{enumerate}
+\item We handled boundaries by modular operations, thus making the space in which rabbits evolve equivalent to a 2-dimensional torus.
+\item We handled collisions by trying a at most 8 random directions for each rabbit until a free cell is found. If no free cell is found in 8 trials, we decide to leave the rabbit in place. This is not perfect because nothing prevents a rabbit from trying 8 times the same occupied cells, even if a free one is nearby. 
+\end{enumerate}
+Finally, let us note that we have fixed some parameters that have some importance: the amount of energy lost at each round for a rabbit is 1, and the amount gained by eating 1 unit of grass is 1 as well.
 
 \section{Results}
 % In this section, you study and describe how different variables (e.g. birth threshold, grass growth rate etc.) or combinations of variables influence the results. Different experiments with diffrent settings are described below with your observations and analysis
+For enhanced readability, we chose to note the birth threshold as $b$, the grass growth rate as $g$, and the inital number of agents as $n$.
 
 \subsection{Experiment 1}
 
 \subsubsection{Setting}
+We will start by a setting with a medium $b$ (12) as well as a medium $g$ (30). We keep the grid size at standard values (20x20) and the inital number of agents at 20.
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
+In this setting, we observe quick oscillations: the grass starts growing quickly, which thus enables the rabbits to reproduce. The resulting amount of rabbits then eats quickly all the grass, and some of them starve to death, which brings the number of rabbits down and the cycle starts again. These oscillations seemed damped in the long run, although some occasional peaks can appear at any time.
 
 \subsection{Experiment 2}
 
 \subsubsection{Setting}
+Let us see how our rabbits do when food is scarce. We maintain all parameters at the same values (including $b=12$) except for $g$ which we set at 20.
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
+This time we observe that the rabbits do not survive: they disappear very quickly. Note that this value of 20 is not a random choice: we have observed that for $g \leq 21$ oscillations appear. They have a low period and high amplitude at first and then become quicker and smaller as $g$ increases. (Of course this value of 21 depends on $b$). 
 
-\vdots
 
-\subsection{Experiment n}
+\subsection{Experiment 3}
 
 \subsubsection{Setting}
+In this experiment, we will analyze the effects of overpopulation. We will set $b=12$, $g=30$ and $n=60$.
 
 \subsubsection{Observations}
 % Elaborate on the observed results %
+We observe a very impressive drop of population at the beginning, as rabbits fiercely compete for food. But after one or two oscillations cycles, we retrieve the moderate oscillations seen in experiment 1.
+
+\subsection{Experiment 4}
+\subsubsection{Setting}
+For the last experiment, let us see if a single rabbit can lead to a thriving population. The only difference with experiment 3 is that $n=1$.
+
+\subsubsection{Observations}
+The single rabbit can indeed give birth to a normal oscillatory population after a very sharp increase in population. But for this it needs luck: its first steps are critical. Once it found food, the population thrives.
 
 \end{document}
