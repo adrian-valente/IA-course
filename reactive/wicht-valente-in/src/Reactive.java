@@ -99,9 +99,7 @@ public class Reactive implements ReactiveBehavior{
 
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
-		State s1 = new State(vehicle.getCurrentCity(),null);
 		Action action;
-		System.out.println("Action "+numActions);
 		if (availableTask == null)
 			state = new State(vehicle.getCurrentCity(), null);
 		else
@@ -112,8 +110,6 @@ public class Reactive implements ReactiveBehavior{
 			action = new Action.Move(state.getPosition().randomNeighbor(random));
 			System.out.println("No mapping for state "+state);
 		}
-		System.out.println(s1.equals(state));
-		System.out.println(s1);
 		
 		if (action instanceof Action.Pickup){
 			action = new Pickup(availableTask);
