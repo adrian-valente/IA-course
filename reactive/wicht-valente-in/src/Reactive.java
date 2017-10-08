@@ -22,7 +22,7 @@ public class Reactive implements ReactiveBehavior{
 	private int numActions;
 	private Agent myAgent;
 	private State state;
-	private HashMap<State,Action> V;	
+	private HashMap<State,Action> best;	
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -30,39 +30,58 @@ public class Reactive implements ReactiveBehavior{
 		this.random = new Random();
 		this.numActions = 0;
 		this.myAgent = agent;
+		this.best = new HashMap<State,Action>();
 		
 		learn(topology,td);
 	}
 	
 	public void learn(Topology topology, TaskDistribution td){
+		System.out.println("Learning...");
 		ArrayList<State> states = generateStates(topology);
-		HashMap<State,HashMap<Action,Double>> Q = new HashMap<State,HashMap<Action,Double>>();
+		//HashMap<State,HashMap<Action,Double>> Q = new HashMap<State,HashMap<Action,Double>>();
 		HashMap<State,Double> V = new HashMap<State,Double>();
-		//Build V
-		for (State s : states)
+		double qmax;
+		Action argmaxQ;
+		//Build V and Q
+		for (State s : states){
 			V.put(s, new Double(0));
+			//Q.put(s, new HashMap<Action,Double>());
+		}
 		
 		//Learning
-		for (State s : states){
-			//Action pickup
-			if (s.getTaskDest() != null){
-				double q = td.reward(s.getPosition(), s.getTaskDest());;
-				for (State s2 : states){
-					if (s2.getPosition() == s.getTaskDest()){
-						q += discount*td.probability(s.getTaskDest(), s2.getTaskDest())*V.get(s2);
+		for (int i=0; i<100; i++){
+			System.out.println("Loop "+i);
+			for (State s : states){
+				qmax = Double.MIN_VALUE;
+				argmaxQ = null;
+				//Action pickup
+				if (s.getTaskDest() != null){
+					double q = td.reward(s.getPosition(), s.getTaskDest());;
+					for (State s2 : states){
+						if (s2.getPosition() == s.getTaskDest()){
+							q += discount*td.probability(s.getTaskDest(), s2.getTaskDest())*V.get(s2);
+						}
 					}
+					qmax = q;
+					argmaxQ = new Action.Pickup(null);
+					//Q.get(s).put(new Action.Pickup(null), new Double(q));
 				}
-				Q.get(s).put(new Action.Pickup(null), new Double(q));
-			}
-			//Actions Move
-			for (City dest : topology.cities()){
-				double q = 0;
-				for (State s2 : states){
-					if (s2.getPosition() == dest){
-						q += discount*td.probability(dest, s2.getTaskDest())*V.get(s2);
+				//Actions Move
+				for (City dest : topology.cities()){
+					double q = 0;
+					for (State s2 : states){
+						if (s2.getPosition() == dest){
+							q += discount*td.probability(dest, s2.getTaskDest())*V.get(s2);
+						}
 					}
+					if (q > qmax){
+						qmax = q;
+						argmaxQ = new Action.Move(dest);
+					}
+					//Q.get(s).put(new Action.Move(dest),new Double(q));
 				}
-				Q.get(s).put(new Action.Move(dest),new Double(q));
+				best.put(s, argmaxQ);
+				V.put(s, qmax);
 			}
 		}
 	}
@@ -80,18 +99,28 @@ public class Reactive implements ReactiveBehavior{
 
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
+		State s1 = new State(vehicle.getCurrentCity(),null);
 		Action action;
-
-		if (availableTask == null || random.nextDouble() > 0.5) {
-			City currentCity = vehicle.getCurrentCity();
-			action = new Move(currentCity.randomNeighbor(random));
-		} else {
+		System.out.println("Action "+numActions);
+		if (availableTask == null)
+			state = new State(vehicle.getCurrentCity(), null);
+		else
+			state = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
+		if (best.containsKey(state))
+			action = best.get(state);
+		else{
+			action = new Action.Move(state.getPosition().randomNeighbor(random));
+			System.out.println("No mapping for state "+state);
+		}
+		System.out.println(s1.equals(state));
+		System.out.println(s1);
+		
+		if (action instanceof Action.Pickup){
 			action = new Pickup(availableTask);
 		}
 		
-		if (numActions >= 1) {
-			System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
-		}
+		System.out.println("The total profit after "+numActions+" actions is "+myAgent.getTotalProfit()+" (average profit: "+(myAgent.getTotalProfit() / (double)numActions)+")");
+		
 		numActions++;
 		
 		return action;

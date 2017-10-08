@@ -26,6 +26,27 @@ public class State {
 	public void setTaskDest(City taskDest) {
 		this.taskDest = taskDest;
 	}
+	
+	@Override
+	public String toString(){
+		return "("+this.position+"("+this.position.id+")"+","+this.taskDest+")";
+	}
+	
+	public boolean equals(State s){
+		if (taskDest == null && s.getTaskDest() == null)
+			return position.equals(s.getPosition());
+		else if (taskDest != null && s.getTaskDest() != null)
+			return (position.equals(s.getPosition())) && (taskDest.equals(s.getTaskDest()));
+		else
+			return false;
+	}
 
+	@Override
+	public int hashCode(){
+		if (taskDest == null)
+			return 256*position.hashCode();
+		else
+			return 256*position.hashCode()+1+taskDest.hashCode();
+	}
 
 }
