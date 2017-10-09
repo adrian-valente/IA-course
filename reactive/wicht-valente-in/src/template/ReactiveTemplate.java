@@ -23,7 +23,7 @@ public class ReactiveTemplate implements ReactiveBehavior{
 	private State state;
 	private ArrayList<State> states;
 	private HashMap<State,City> best;
-	private final double cost = 0.1;
+	private final double cost = 1;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution td, Agent agent) {
@@ -35,12 +35,9 @@ public class ReactiveTemplate implements ReactiveBehavior{
 		this.best = new HashMap<State,City>();
 		
 		learn(topology,td);
-		System.out.println(this.best);
 	}
 	
 	public void learn(Topology topology, TaskDistribution td){
-		System.out.println("Learning...");
-		//HashMap<State,HashMap<Action,Double>> Q = new HashMap<State,HashMap<Action,Double>>();
 		HashMap<State,Double> V = new HashMap<State,Double>();
 		double qmax;
 		City argmaxQ;

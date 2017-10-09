@@ -1,5 +1,4 @@
 package template;
-import logist.task.Task;
 import logist.topology.Topology.City;
 
 public class State {
