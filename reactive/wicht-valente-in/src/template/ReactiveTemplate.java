@@ -50,12 +50,10 @@ public class ReactiveTemplate implements ReactiveBehavior{
 		}
 		
 		boolean change = true;
-		int i = 0;
 		
 		//Learning
 		while(change){
 			change = false;
-			++i;
 			for (State s : states){
 				qmax = Double.MIN_VALUE;
 				argmaxQ = null;
@@ -93,8 +91,6 @@ public class ReactiveTemplate implements ReactiveBehavior{
 				V.put(s, qmax);
 			}
 		}
-
-		System.out.println(i);
 	}
 	
 	public ArrayList<State> generateStates(Topology topology){
