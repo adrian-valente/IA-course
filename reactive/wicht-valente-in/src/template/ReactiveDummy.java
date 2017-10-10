@@ -13,10 +13,9 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveTemplate implements ReactiveBehavior {
+public class ReactiveDummy implements ReactiveBehavior {
 
 	private Random random;
-	private double pPickup;
 	private int numActions;
 	private Agent myAgent;
 
@@ -25,11 +24,8 @@ public class ReactiveTemplate implements ReactiveBehavior {
 
 		// Reads the discount factor from the agents.xml file.
 		// If the property is not present it defaults to 0.95
-		Double discount = agent.readProperty("discount-factor", Double.class,
-				0.95);
 
 		this.random = new Random();
-		this.pPickup = discount;
 		this.numActions = 0;
 		this.myAgent = agent;
 	}
@@ -37,9 +33,9 @@ public class ReactiveTemplate implements ReactiveBehavior {
 	@Override
 	public Action act(Vehicle vehicle, Task availableTask) {
 		Action action;
+		City currentCity = vehicle.getCurrentCity();
 
-		if (availableTask == null || random.nextDouble() > pPickup) {
-			City currentCity = vehicle.getCurrentCity();
+		if (availableTask == null || currentCity.name.equals("Paris") || currentCity.name.equals("Marseille")) {
 			action = new Move(currentCity.randomNeighbor(random));
 		} else {
 			action = new Pickup(availableTask);

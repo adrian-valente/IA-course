@@ -1,0 +1,59 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage[top=0.8in, bottom=0.8in, left=0.8in, right=0.8in]{geometry}
+% add other packages here
+
+% put your group number and names in the author field
+\title{\bf Exercise 2: A Reactive Agent for the Pickup and Delivery Problem}
+\author{Group \textnumero: Student 1, Student 2}
+
+% the report should not be longer than 3 pages
+
+\begin{document}
+\maketitle
+
+\section{Problem Representation}
+
+\subsection{Representation Description}
+% describe how you design the state representation, the possible actions, the reward table and the probability transition table
+
+\subsection{Implementation Details}
+% describe the implementation details of the representations above and the implementation details of the reinforcement learning algorithm you implemented
+
+\section{Results}
+% in this section, you describe several results from the experiments with your reactive agent
+
+\subsection{Experiment 1: Discount factor}
+% the purpose of this experiment is to understand how the discount factor influences the result
+
+\subsubsection{Setting}
+% you describe how you perform the experiment (you also need to specify the configuration used for the experiment)
+For this experiment we will test the average gain per action by when changing the discount factor: we will test it with 3 different values: 0.999, 0.8 and 0.05. For each setting, we have let our agent work for more than 6000 actions to get an average value that is quite stable and that doesn't change a lot at each action.
+
+\subsubsection{Observations}
+% you describe the experimental results and the conclusions you inferred from these results
+For a discount value of 0.999 we get around 37400 average profit per action.
+\newline
+For a discount value of 0.800 we get around 36800 average profit per action.
+\newline
+For a discount value of 0.050 we get around 36600 average profit per action.
+\newline
+Those result are very interressant because we can see that when we learn taking into account totally the next action we get better income than when learning taking only partially into account the next action. This seems to be normal: we will get more income if we take into account the next action than if we doesn't look at it at all. 
+
+
+\subsection{Experiment 2: Comparisons with dummy agents}
+% you compare the results of your agent with two dummy agents: the random agent that was already given in the starter files and another dummy agent that you define and create. You should report the results from the simulations using the topologies given in the starter files and optionally, additional topologies that you create.
+
+\subsubsection{Setting}
+% you describe how you perform the experiment and you describe the dummy agent you created (you also need to specify the configuration used for the experiment)
+For this experiment, we have used 2 different dummy agent: the random dummy agent you provide us and a dummy agent that take all the tasks except those that are in Paris or Marseille.
+
+\subsubsection{Observations}
+% elaborate on the observed results
+With the provided dummy agent, we get an average reward between 30000 and 31000. Compared to our agent who learned the task he has to take, there is a quite big difference: between 15 and 20 percent which is quite interressant to take into account.
+With the dummy agent who does not like clients from Paris and Marseille, we get an average reward per action of around 25000. This shows that every city is important for having the maximum benefits.
+
+
+\end{document}
