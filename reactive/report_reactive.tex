@@ -18,9 +18,34 @@
 
 \subsection{Representation Description}
 % describe how you design the state representation, the possible actions, the reward table and the probability transition table
+We have identified that the state of an agent can be defined by the city he is currently in, whether there is a task available, and what task it is. However, the last two parameters can be aggregated into a single one: indeed, the task origin is obviously the current city, and the destination city of the task can be set to \texttt{null} if there is no task available. Thus, our state representation is:
+$$ \texttt{(City position, City taskDest)} $$
+where \texttt{taskDest} is \texttt{null} if there is no task.
+\\
+
+The possible actions for an agent are to pickup the task if one is available, and to move to a neighboring city in all cases. We have debated of whether the agent should be able to move without a load to any city, and have decided that it should be able to move only to its topological neighbors.
+\\
+
+The reward table is then defined for a pickup action by the difference between the reward for the task and the cost associated with the distance:
+$$ R(s,a) = r(s.pos, a.dest) - d(s.pos,a.dest) $$
+For an action move, it is simply the cost of the distance:
+$$ R(s,a) = - d(s.pos,a.dest) $$
+~\\
+
+Finally the probability transition table is given by the probabilities defined in the task distribution, for the destination of the chosen action:
+$$ T(s,a,s') = p(s' | a.dest) $$
 
 \subsection{Implementation Details}
 % describe the implementation details of the representations above and the implementation details of the reinforcement learning algorithm you implemented
+The first implementation challenge of this exercise is to define datastructures to store relevant information. The most important structure is the map \texttt{Best} which to a state associates an action. We had first used a \texttt{HashMap<State,Action>}, but handling the \texttt{Action} was not very practical (because it is an abstract class) and unnecessary. We finally used a \texttt{HashMap<State,City>}, where we associate to a state the \texttt{null} value to encode the pickup action, and a city to encode a move action.\\
+
+When coding the reinforcement learning algorithm, we noticed several things: 
+\begin{itemize}
+\item it is not necessary to store the full $Q(s,a)$ nor the full matrices $R$ and $T$.
+\item however it is necessary to generate the set of all existing states, which can be done once, and the set of possible actions, which has to be done for each state.
+\item we can use a hard stopping criterion: stop when the table $V$ has not changed
+\end{itemize}
+
 
 \section{Results}
 % in this section, you describe several results from the experiments with your reactive agent
@@ -40,7 +65,7 @@ For a discount value of 0.800 we get around 36800 average profit per action.
 \newline
 For a discount value of 0.050 we get around 36600 average profit per action.
 \newline
-Those result are very interressant because we can see that when we learn taking into account totally the next action we get better income than when learning taking only partially into account the next action. This seems to be normal: we will get more income if we take into account the next action than if we doesn't look at it at all. 
+Those results are very interessant because we can see that when we  take into account more the next action we get better income than when taking only partially into account the next action. This seems to be normal: we will get more income if we take into account the next action than if we don't look at it at all. 
 
 
 \subsection{Experiment 2: Comparisons with dummy agents}
