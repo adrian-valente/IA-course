@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
-import logist.plan.Action;
-import logist.plan.Action.Move;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -34,19 +32,17 @@ public class Deliberative implements DeliberativeBehavior {
 		
 	}
 	
-	private State transit(State currentState, Action a) {
-		if(a instanceof Move) {
-			return transitMove(currentState,((Move) (a)));
+	public ArrayList<State> transit(State s, Vehicle v) {
+		ArrayList<State> states = new ArrayList<State>();
+		City c = s.getCity();
+		int freeCharge = 0;
+		for(City n: c.neighbors()) {
+			states.add(s.move(n));
 		}
-		if(a instanceof Action.Pickup) {
-			return null;
+		for(Task t: s.localPickupTasks()) {
+			if()
 		}
-		return currentState;
 		
+		return states;
 	}
-	
-	public State transitMove(State currentState, Move m) {
-		return currentState;
-	}
-
 }
