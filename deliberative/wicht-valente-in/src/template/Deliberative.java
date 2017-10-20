@@ -1,9 +1,12 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
+import logist.plan.Action;
 import logist.plan.Plan;
 import logist.simulation.Vehicle;
 import logist.task.Task;
@@ -32,10 +35,10 @@ public class Deliberative implements DeliberativeBehavior {
 		
 	}
 	
-	public ArrayList<State> transit(State s, Vehicle v) {
-		ArrayList<State> states = new ArrayList<State>();
+	public List<State> transit(State s, int capacity) {
+		List<State> states = new ArrayList<State>();
 		City c = s.getCity();
-		int freeCharge = v.capacity()-s.weight();
+		
 		
 		//if there is no task carried, try to move to each neighbor city
 		if(s.getToDeliver().isEmpty()) {
@@ -51,6 +54,7 @@ public class Deliberative implements DeliberativeBehavior {
 			states.add(s.move(next));
 		}
 		
+		int freeCharge = capacity - s.weight();
 		//try to pickup each task available in the current city
 		for(Task t: s.localPickupTasks()) {
 			if(freeCharge >= t.weight) {
@@ -60,12 +64,52 @@ public class Deliberative implements DeliberativeBehavior {
 		
 		//for each successor state, deliver tasks if possible
 		for(State state: states) {
-			ArrayList<Task> local = state.localDeliverTask();
+			List<Task> local = state.localDeliverTask();
 			for(Task t: local) {
 				state = state.deliver(t);
 			}
 		}
 		
+		
 		return states;
+	}
+	
+	
+	@SuppressWarnings("unused")
+	private State BFS(Vehicle v, TaskSet t) {
+		
+		City city = v.getCurrentCity();
+		ArrayList<Task> tasks = new ArrayList<Task>(t);
+		ArrayList<Task> toDeliver = new ArrayList<Task>(v.getCurrentTasks());
+		State init = new State(city, tasks, toDeliver, Collections.<Action>emptyList());
+		
+		//Q = initial state
+		List<State> q = new ArrayList<State>();
+		q.add(init);
+		
+		//C are the visited states
+		List<State> c = Collections.<State>emptyList();
+		
+		while(! q.isEmpty()) {
+			State node = q.get(0);
+			q.remove(0);
+			if(node.isFinal()) {
+				return node;
+			}
+			
+			//check if already passed at this state and put state in visited states
+			boolean cycle = false;
+			for(State s: c) {
+				if(s.equals(node)) {
+					cycle = true;
+					break;
+				}
+			}
+			if(! cycle) {
+				c.add(node);
+				q.addAll(transit(node, v.capacity()));
+			}
+		}
+		return null;
 	}
 }
