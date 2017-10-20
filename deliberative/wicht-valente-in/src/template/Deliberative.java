@@ -2,6 +2,7 @@ package template;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import logist.agent.Agent;
@@ -81,7 +82,7 @@ public class Deliberative implements DeliberativeBehavior {
 		City city = v.getCurrentCity();
 		ArrayList<Task> tasks = new ArrayList<Task>(t);
 		ArrayList<Task> toDeliver = new ArrayList<Task>(v.getCurrentTasks());
-		State init = new State(city, tasks, toDeliver, Collections.<Action>emptyList());
+		State init = new State(city, tasks, toDeliver, Collections.<Action>emptyList(), 0.0);
 		
 		//Q = initial state
 		List<State> q = new ArrayList<State>();
@@ -108,6 +109,52 @@ public class Deliberative implements DeliberativeBehavior {
 			if(! cycle) {
 				c.add(node);
 				q.addAll(transit(node, v.capacity()));
+			}
+		}
+		return null;
+	}
+	
+	@SuppressWarnings("unused")
+	private State ASTAR(Vehicle v, TaskSet t) {
+		
+		City city = v.getCurrentCity();
+		ArrayList<Task> tasks = new ArrayList<Task>(t);
+		ArrayList<Task> toDeliver = new ArrayList<Task>(v.getCurrentTasks());
+		State init = new State(city, tasks, toDeliver, Collections.<Action>emptyList(), 0.0);
+		
+		//Q = initial state
+		List<State> q = new ArrayList<State>();
+		q.add(init);
+
+		//C are the visited states
+		List<State> c = Collections.<State>emptyList();
+		
+		while(! q.isEmpty()) {
+			State node = q.get(0);
+			q.remove(0);
+			if(node.isFinal()) {
+				return node;
+			}
+			
+			//find copy of node in C if it exists
+			State cCopy = null;
+			for(State s: c) {
+				if(s.equals(node)) {
+					cCopy = s;
+					break;
+				}
+			}
+			
+			if(cCopy == null || node.getDist() < cCopy.getDist()) {
+				c.add(node);
+				q.addAll(transit(node, v.capacity()));
+				
+				//sort q
+				Collections.sort(q, new Comparator<State>() {
+					public int compare(State s1, State s2) {
+						return s1.d() < s2.d() ? -1 : s1.d() == s2.d() ? 0 : 1;
+					}
+				});
 			}
 		}
 		return null;

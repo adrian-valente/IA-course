@@ -13,12 +13,16 @@ public class State {
 	private final List<Task> tasks;
 	private final List<Task> toDeliver;
 	private final List<Action> actions;
+	private final double dist;
 	
-	public State(City c, List<Task> t, List<Task> d, List<Action> a) {
+	
+	
+	public State(City c, List<Task> t, List<Task> d, List<Action> a, double dist) {
 		this.city = c;
 		this.tasks = t;
 		this.toDeliver = d;
 		this.actions = a;
+		this.dist = dist;
 		
 	}
 	
@@ -30,15 +34,19 @@ public class State {
 		return this.city.equals(s.getCity()) && this.tasks.equals(s.getTasks()) && this.toDeliver.equals(s.getToDeliver());
 	}
 	
-	public double distance() {
-		double dist = 0.0;
+	public double distanceToFinal() {
+		double distance = 0.0;
 		for(Task t: this.tasks) {
-			dist += t.pathLength();
+			distance += t.pathLength();
 		}
 		for(Task t: this.toDeliver) {
-			dist += this.city.distanceTo(t.deliveryCity);
+			distance += this.city.distanceTo(t.deliveryCity);
 		}
-		return dist;
+		return distance;
+	}
+	
+	public double d() {
+		return this.dist + this.distanceToFinal();
 	}
 
 	public City getCity() {
@@ -55,6 +63,10 @@ public class State {
 	
 	public List<Action> getActions(){
 		return this.actions;
+	}
+	
+	public double getDist() {
+		return this.dist;
 	}
 	
 	public List<Task> localPickupTasks(){
@@ -88,7 +100,7 @@ public class State {
 	public State move(City c) {
 		List<Action> act = new ArrayList<Action>(this.actions);
 		act.add(new Action.Move(c));
-		return new State(c, this.tasks, this.toDeliver, act);
+		return new State(c, this.tasks, this.toDeliver, act, this.dist + this.city.distanceTo(c));
 	}
 	
 	public State deliver(Task t) {
@@ -96,7 +108,7 @@ public class State {
 		deliver.remove(t);
 		List<Action> act = new ArrayList<Action>(this.actions);
 		act.add(new Action.Delivery(t));
-		return new State(this.city, this.tasks, deliver, act);
+		return new State(this.city, this.tasks, deliver, act, this.dist);
 	}
 	
 	public State pickup(Task t) {
@@ -106,6 +118,7 @@ public class State {
 		act.add(new Action.Pickup(t));
 		newtasks.remove(t);
 		deliver.add(t);
-		return new State(this.city, newtasks, deliver, act);
+		return new State(this.city, newtasks, deliver, act, this.dist);
 	}
+
 }
