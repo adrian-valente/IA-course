@@ -23,7 +23,7 @@ public class State {
 	}
 	
 	public boolean isFinal() {
-		return tasks.isEmpty();
+		return tasks.isEmpty() && toDeliver.isEmpty();
 	}
 	
 	public boolean equals(State s) {
