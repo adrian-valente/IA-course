@@ -1,7 +1,9 @@
 package template;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import logist.plan.Action;
 import logist.task.Task;
@@ -34,7 +36,27 @@ public class State {
 		return this.city.equals(s.getCity()) && this.tasks.equals(s.getTasks()) && this.toDeliver.equals(s.getToDeliver());
 	}
 	
+	private HashSet<City> toGo(){
+		HashSet<City> cities = new HashSet<City>();
+		for(Task t: this.tasks) {
+			cities.add(t.deliveryCity);
+		}
+		for(Task t: this.toDeliver) {
+			cities.add(t.deliveryCity);
+		}
+		return cities;
+	}
+	
 	public double distanceToFinal() {
+		HashSet<City> cities = this.toGo();
+		double d = 0.0;
+		for(City c: cities) {
+			d += this.city.distanceTo(c);
+		}
+		return d;
+	}
+	
+	public double distanceToFinal2() {
 		double distance = 0.0;
 		for(Task t: this.tasks) {
 			distance += t.pathLength();
