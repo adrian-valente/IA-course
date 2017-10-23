@@ -47,28 +47,23 @@ public class State {
 		return cities;
 	}
 	
-	/* This function returns the distance of the shortest path starting in start
-	 * and going through all cities in cities
-	 */
-	public static double distancePathRec(City start, Set<City> cities){
-		if (cities.isEmpty())
-			return 0.;
-		double min = Double.MAX_VALUE;
-		City argmin = null;
-		for (City city : cities){
-			if (start.distanceTo(city) < min){
-				min = start.distanceTo(city);
-				argmin = city;
-			}
-		}
-		Set<City> newCities = new HashSet<City>(cities);
-		newCities.remove(argmin);
-		return min + distancePathRec(argmin,newCities);
-	}
-	
 	public double distanceToFinal() {
 		HashSet<City> cities = this.toGo();
-		return distancePathRec(this.city,cities);
+		if (cities.isEmpty())
+			return 0.;
+		double maxD = Double.MIN_VALUE;
+		double d = 0;
+		for (Task t: this.tasks){
+			d = this.city.distanceTo(t.pickupCity) + t.pickupCity.distanceTo(t.deliveryCity);
+			if (d>maxD)
+				maxD = d;
+		}
+		for (Task t: this.toDeliver){
+			d = this.city.distanceTo(t.deliveryCity);
+			if (d>maxD)
+				maxD = d;
+		}
+		return maxD;
 	}
 	
 	public double distanceToFinal2() {
