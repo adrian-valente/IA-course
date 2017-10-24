@@ -8,7 +8,7 @@
 
 % Put your group number and names in the author field %
 \title{\bf Excercise 3\\ Implementing a deliberative Agent}
-\author{Group \textnumero : Student 1, Student 2}
+\author{Group \textnumero : Bruno Wicht, Adrian Valente}
 
 
 % N.B.: The report should not be longer than 3 pages %
@@ -21,31 +21,47 @@
 
 \subsection{Intermediate States}
 % Describe the state representation %
+The important factors that the agent has to take into account are the distribution of tasks (those that have not been picked up, and those that have already been picked up) and its current position. Thus our state representation will be:
+$$ (p, (t_1,\dots,t_n), (t'_1,\dots,t'_m)) $$
+where $p$ is a \texttt{City} representing the current position, $(t_1,\dots,t_n)$ is a \texttt{List<Tasks>} representing the tasks that haven't been picked up yet, and $(t'_1,\dots,t'_m)$ is also a \texttt{List<Tasks>} representing the tasks that the agent is currently transporting. To our class \texttt{State} we have added as helper variables the list of actions took from the root to the current state, and the total cost of that path.
 
 \subsection{Goal State}
 % Describe the goal state %
+A goal state is simply a state where the two lists of tasks are empty (there can be several goal states, depending on the city where we end up). 
 
 \subsection{Actions}
 % Describe the possible actions/transitions in your model %
+For the actions, we use the representation given by Logist. There are three types of actions: Move (to a neighbor), Pickup and Delivery. An important aspect is to generate the set of actions that the agent can take from a given state. It can move to any neighbor, pickup any combination of the available tasks that fit into its capacity, deliver some of the packets it is currently transporting. Since taking this last action never leads to an additional cost, we will always deliver our packets as soon as we can. This enables us to prune the tree a little. 
+
+Moreover, in a given state with multiple available tasks, we only try to pickup each of them. The combinations will naturally arise during the branching of the tree.
 
 
 \section{Implementation}
 
 \subsection{BFS}
 % Details of the BFS implementation %
+The implementation of BFS is really straightforward: it suffices to visit a node, list all its children wich we add to a queue, and then move to the next node in the queue. Since it is possible to visit a same state several times, which can lead to cycles, we check at each step if we have already visited the current state.
 
 \subsection{A*}
 % Details of the A* implementation %
+The algorithms is similar to BFS, except that this time we visit first the nodes which have the smaller \texttt{d()} value (that is, the sum of the cost of past actions and of the heuristic). In order to enforce that visiting order, nodes are added to a \texttt{PriorityQueue}. 
 
 \subsection{Heuristic Function}
 % Details of the heuristic functions: main idea, optimality, admissibility %
+Our heuristic function is defined by the maximal distance that we will have to cover for each task. That distance is the distance between the current city and the delivery city for a task that we are delivering, and the distance between the current city and the pickup city plus the distance between the pickup and the delivery city for a task that we haven't picked up yet. 
 
+Clearly, that function is smaller than the actual cost of the smaller path between the current state and a goal state. Indeed, the agent will have to cover at least the distance defining the heuristic. Thus, our heuristic function is admissible, ie. preserves optimality of the search algorithm.
+
+However, one could imagine more precise heuristics. For example we have thought of using the length of the shortest path going through all cities in which a task has to be delivered or picked up. That heuristic is also admissible, and estimates better the value of a state. Indeed, with our heuristic, getting closer to a task that does not maximize the heuristic does not bring any apparent improvement. But the cost of computation clearly outweighs the advantages of that other heuristic.
 
 \section{Results}
 
 \subsection{Experiment 1: BFS and A* Comparison}
 % Compare the two algorithms in terms of: optimality, efficiency, limitations %
 % Report the number of tasks for which you can build a plan in less than one minute %
+First, let us note that the BFS algorithm does not always compute the optimal solution in terms of kilometers covered. Indeed, if we give it a single task to carry from Lausanne to Bern, the BFS algorithm will carry it through Neuchâtel, which is slightly more expensive than going through Fribourg.
+
+The difference in efficiency is staggering: while the BFS algorithm usually needs around 8 seconds to handle computations for 6 tasks, the A* algorithm finds the optimal plan in a little more than 0.5 seconds. The BFS algorithm can take more than one minute of computations for 6 tasks (random seed=1), and always does for 7 tasks, while the A* algorithm needs a few seconds. With 8 tasks, the A* algorithm needs between 5 seconds and 2 minutes, and always more than one minute for 9 tasks (tests carried on MacBookPro 2010, Intel Core 2 Duo, random seeds=1,2,3). 
 
 \subsubsection{Setting}
 % Describe the settings of your experiment: topology, task configuration, etc. %

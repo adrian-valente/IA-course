@@ -51,6 +51,7 @@ public class Deliberative implements DeliberativeBehavior {
 	@Override
 	public Plan plan(Vehicle vehicle, TaskSet tasks) {
 		State state;
+		long start = System.currentTimeMillis();
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
 		case ASTAR:
@@ -72,6 +73,7 @@ public class Deliberative implements DeliberativeBehavior {
 			System.out.println(a);
 		}
 		System.out.println(dist);
+		System.out.println("Computation time: "+(System.currentTimeMillis() - start));
 		Plan plan = new Plan(vehicle.getCurrentCity(), actions);
 		return plan;
 	}
