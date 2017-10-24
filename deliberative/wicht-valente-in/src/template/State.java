@@ -34,72 +34,11 @@ public class State {
 		return this.city.equals(s.getCity()) && this.tasks.equals(s.getTasks()) && this.toDeliver.equals(s.getToDeliver());
 	}
 	
-	private HashSet<City> toGo(){
-		HashSet<City> cities = new HashSet<City>();
-		for(Task t: this.tasks) {
-			cities.add(t.pickupCity);
-			cities.add(t.deliveryCity);
-		}
-		for(Task t: this.toDeliver) {
-			cities.add(t.deliveryCity);
-		}
-		return cities;
-	}
 	/*
-	private List<List<City>> permutations(List<City> cities){
-		if(cities.size() == 1) {
-			List<List<City>> ret = new ArrayList<List<City>>();
-			ret.add(cities);
-			return ret;
-		}
-		List<List<City>> perm = new ArrayList<List<City>>();
-		for(City c: cities) {
-			List<City> remCities = new ArrayList<City>(cities);
-			remCities.remove(c);
-			List<List<City>> perms = permutations(remCities);
-			for(List<City> p : perms) {
-				List<City> newPerm = new ArrayList<City>(p);
-				newPerm.add(c);
-				perm.add(newPerm);
-			}
-		}
-		return perm;
-	}
-	
-	private double path(List<City> c) {
-		if(c.isEmpty()) {
-			return 0.0;
-		}
-		double d = 0.0;
-		if(! c.isEmpty()) {
-			d += this.city.distanceTo(c.get(0));
-		}
-		while(c.size()>1) {
-			d+= c.get(0).distanceTo(c.get(1));
-			c.remove(0);
-		}
-		return d;
-	}
-	
-	private double shortestPath() {
-		List<City> toVisit = new ArrayList<City>(this.toGo());
-		toVisit.remove(this.city);
-		List<List<City>> permutations = this.permutations(toVisit);
-		if(permutations.isEmpty()) {
-			return 0.0;
-		}
-		double d = Double.MAX_VALUE;
-		for(List<City> c : permutations) {
-			d = Math.min(d, this.path(c));
-		}
-		return d;
-		
-	}
-	*/
-	
+	 * Our heuristic function
+	 */
 	public double distanceToFinal() {
-		HashSet<City> cities = this.toGo();
-		if (cities.isEmpty())
+		if (this.tasks.isEmpty())
 			return 0.;
 		double maxD = Double.MIN_VALUE;
 		double d = 0;
@@ -116,10 +55,16 @@ public class State {
 		return maxD;
 	}
 	
+	/*
+	 * The sum of the cost of past actions + the heuristic
+	 */
 	public double d() {
 		return this.dist + this.distanceToFinal();
 	}
 
+	/*
+	 * Getters
+	 */
 	public City getCity() {
 		return this.city;
 	}
@@ -140,6 +85,9 @@ public class State {
 		return this.dist;
 	}
 	
+	/*
+	 * Lists the set of tasks that can be picked up in the current city
+	 */
 	public List<Task> localPickupTasks(){
 		List<Task> local = new ArrayList<Task>();
 		for(Task t: this.tasks) {
@@ -150,16 +98,22 @@ public class State {
 		return local;
 	}
 	
+	/*
+	 * Returns the list of tasks transported that can be delivered in the current city
+	 */
 	public List<Task> localDeliverTask(){
 		List<Task> local = new ArrayList<Task>();
 		for(Task t: this.toDeliver) {
-			if(t.pickupCity.equals(this.city)) {
+			if(t.deliveryCity.equals(this.city)) {
 				local.add(t);
 			}
 		}
 		return local;
 	}
 	
+	/*
+	 * Total weight currently transported
+	 */
 	public int weight() {
 		int w = 0;
 		for(Task t: this.toDeliver) {
