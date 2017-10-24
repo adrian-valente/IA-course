@@ -3,8 +3,6 @@ package template;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
 import logist.plan.Action;
 import logist.task.Task;
 import logist.topology.Topology.City;
@@ -39,6 +37,7 @@ public class State {
 	private HashSet<City> toGo(){
 		HashSet<City> cities = new HashSet<City>();
 		for(Task t: this.tasks) {
+			cities.add(t.pickupCity);
 			cities.add(t.deliveryCity);
 		}
 		for(Task t: this.toDeliver) {
@@ -46,6 +45,57 @@ public class State {
 		}
 		return cities;
 	}
+	/*
+	private List<List<City>> permutations(List<City> cities){
+		if(cities.size() == 1) {
+			List<List<City>> ret = new ArrayList<List<City>>();
+			ret.add(cities);
+			return ret;
+		}
+		List<List<City>> perm = new ArrayList<List<City>>();
+		for(City c: cities) {
+			List<City> remCities = new ArrayList<City>(cities);
+			remCities.remove(c);
+			List<List<City>> perms = permutations(remCities);
+			for(List<City> p : perms) {
+				List<City> newPerm = new ArrayList<City>(p);
+				newPerm.add(c);
+				perm.add(newPerm);
+			}
+		}
+		return perm;
+	}
+	
+	private double path(List<City> c) {
+		if(c.isEmpty()) {
+			return 0.0;
+		}
+		double d = 0.0;
+		if(! c.isEmpty()) {
+			d += this.city.distanceTo(c.get(0));
+		}
+		while(c.size()>1) {
+			d+= c.get(0).distanceTo(c.get(1));
+			c.remove(0);
+		}
+		return d;
+	}
+	
+	private double shortestPath() {
+		List<City> toVisit = new ArrayList<City>(this.toGo());
+		toVisit.remove(this.city);
+		List<List<City>> permutations = this.permutations(toVisit);
+		if(permutations.isEmpty()) {
+			return 0.0;
+		}
+		double d = Double.MAX_VALUE;
+		for(List<City> c : permutations) {
+			d = Math.min(d, this.path(c));
+		}
+		return d;
+		
+	}
+	*/
 	
 	public double distanceToFinal() {
 		HashSet<City> cities = this.toGo();
@@ -64,17 +114,6 @@ public class State {
 				maxD = d;
 		}
 		return maxD;
-	}
-	
-	public double distanceToFinal2() {
-		double distance = 0.0;
-		for(Task t: this.tasks) {
-			distance += t.pathLength();
-		}
-		for(Task t: this.toDeliver) {
-			distance += this.city.distanceTo(t.deliveryCity);
-		}
-		return distance;
 	}
 	
 	public double d() {

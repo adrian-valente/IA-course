@@ -81,24 +81,31 @@ public class Deliberative implements DeliberativeBehavior {
 	public List<State> transit(State s, int capacity) {
 		List<State> states = new ArrayList<State>();
 		City c = s.getCity();
+		List<Task> carried = new ArrayList<Task>();
 
-
+		
+		for(Task t: s.getToDeliver()) {
+			if(t.deliveryCity.equals(c)) {
+				states.add(s.deliver(t));
+			}
+			else {
+				carried.add(t);
+			}
+		}
 		//if there is no task carried, try to move to each neighbor city
-		if(s.getToDeliver().isEmpty()) {
+		if(carried.isEmpty()) {
 			for(City n: c.neighbors()) {
 				states.add(s.move(n));
 			}
 		}
 
-		//try to move to the next city on the path to the delivery city of the first task no taking any new task
+		//try to move to the next city on the path to the delivery city of each task no taking any new task
 		else {
-			Task t = s.getToDeliver().get(0);
-			if(t.deliveryCity.equals(c)) {
-				states.add(s.deliver(t));
-			}
-			else {
-				City next = c.pathTo(t.deliveryCity).get(0);
-				states.add(s.move(next));
+			for(Task t: carried) {
+				if(! t.deliveryCity.equals(c)) {
+					City next = c.pathTo(t.deliveryCity).get(0);
+					states.add(s.move(next));
+				}
 			}
 		}
 
