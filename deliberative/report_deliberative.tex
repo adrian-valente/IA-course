@@ -27,7 +27,7 @@ where $p$ is a \texttt{City} representing the current position, $(t_1,\dots,t_n)
 
 \subsection{Goal State}
 % Describe the goal state %
-A goal state is simply a state where the two lists of tasks are empty (there can be several goal states, depending on the city where we end up). 
+A goal state or a final state is simply a state where the two lists of tasks are empty (there can be several goal states, depending on the city where we end up), this means that all the tasks have been delivered and the vehicle do not need to move anymore. 
 
 \subsection{Actions}
 % Describe the possible actions/transitions in your model %
@@ -48,7 +48,7 @@ The algorithm is similar to BFS, except that this time we visit first the nodes 
 
 \subsection{Heuristic Function}
 % Details of the heuristic functions: main idea, optimality, admissibility %
-Our heuristic function is defined by the \emph{maximal distance that has to be covered to deliver a task}. That distance is the distance between the current city and the delivery city for a task that we are delivering, and the distance between the current city and the pickup city plus the distance between the pickup and the delivery city for a task that we haven't picked up yet. 
+Our heuristic function is defined by the \emph{maximal distance that has to be covered to deliver one of the tasks}. That distance is the distance between the current city and the delivery city for a task that we are delivering, and the distance between the current city and the pickup city plus the distance between the pickup and the delivery city for a task that we haven't picked up yet. 
 
 Clearly, that function is smaller than the actual cost of the smaller path between the current state and a goal state. Indeed, the agent will have to cover at least the distance defining the heuristic. Thus, our heuristic function is admissible, ie. preserves optimality of the search algorithm.
 
@@ -59,9 +59,9 @@ However, one could imagine more precise heuristics. For example we have thought 
 \subsection{Experiment 1: BFS and A* Comparison}
 % Compare the two algorithms in terms of: optimality, efficiency, limitations %
 % Report the number of tasks for which you can build a plan in less than one minute %
-First, let us note that the BFS algorithm does not always compute the optimal solution in terms of kilometers covered. Indeed, if we give it a single task to carry from Lausanne to Bern, the BFS algorithm will carry it through Neuchatel, which is slightly more expensive than going through Fribourg.
+First, let us note that the BFS algorithm does not always compute the optimal solution in terms of kilometers covered. Indeed, the BFS algorithm will take the first solution it find, which is the one containing the less actions but it may not be the one with the lowest cost. On the other side, the A* algorithm is designed to always find the most optimal solution.
 
-The difference in efficiency is staggering: while the BFS algorithm usually needs around 8 seconds to handle computations for 6 tasks, the A* algorithm finds the optimal plan in a little more than 0.5 seconds. The BFS algorithm always needs more than one minute for 7 tasks, while the A* algorithm needs a few seconds. The A* algorithm needs more than one minute for 9 tasks (tests carried on MacBookPro 2010, Intel Core 2 Duo, random seeds=1,2,3). 
+The difference in efficiency is staggering: while the BFS algorithm usually needs around 3 seconds to handle computations for 6 tasks, the A* algorithm finds the optimal plan in a little more than 0.3 seconds. The BFS algorithm always needs more than one minute for 7 tasks, while the A* algorithm needs less than 5 seconds. The A* algorithm needs more than one minute for 9 tasks (tests carried on Lenovo ideapad 710s, intel core i7, random seeds=1,2,3). 
 
 \subsubsection{Setting}
 % Describe the settings of your experiment: topology, task configuration, etc. %
@@ -69,7 +69,7 @@ We have carried our test on the Swiss topology, with multiple task configuration
 
 \subsubsection{Observations}
 % Describe the experimental results and the conclusions you inferred from these results %
-As we have said, the BFS algorithm does not always find the optimal plan, thus the number of kilometers covered is always smaller with the A* algorithm.
+As we have said, the BFS algorithm does not always find the optimal plan, thus the number of kilometers covered is always smaller with the A* algorithm and the coputation time is also smaller with A*, thus we can conclude that the A* algorithm is a lot better than BFS.
 
 \subsection{Experiment 2: Multi-agent Experiments}
 % Observations in multi-agent experiments %

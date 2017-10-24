@@ -63,7 +63,7 @@ public class Deliberative implements DeliberativeBehavior {
 		default:
 			throw new AssertionError("Should not happen.");
 		}
-		
+
 		if (state==null){
 			throw new RuntimeException("Algorithm returned null state");
 		}
@@ -85,15 +85,18 @@ public class Deliberative implements DeliberativeBehavior {
 	public List<State> transit(State s, int capacity) {
 		List<State> states = new ArrayList<State>();
 		City c = s.getCity();
-		List<Task> localDeliver = s.localDeliverTask();
-		
-		//If a task can be delivered now, do it ASAP
-		if (!localDeliver.isEmpty()){
-			states.add(s.deliver(localDeliver.get(0)));
-			return states;
-		}
+		List<Task> carried = new ArrayList<Task>();
 
-		//Try to move to each neighbor city
+		for(Task t: s.getToDeliver()) {
+			if(t.deliveryCity.equals(c)) {
+				states.add(s.deliver(t));
+			}
+			else {
+				carried.add(t);
+			}
+		}
+		//if there is no task carried, try to move to each neighbor city
+
 		for(City n: c.neighbors()) {
 			states.add(s.move(n));
 		}
@@ -103,6 +106,14 @@ public class Deliberative implements DeliberativeBehavior {
 		for(Task t: s.localPickupTasks()) {
 			if(freeCharge >= t.weight) {
 				states.add(s.pickup(t));
+			}
+		}
+
+		//for each successor state, deliver tasks if possible
+		for(State state: states) {
+			List<Task> local = state.localDeliverTask();
+			for(Task t: local) {
+				state = state.deliver(t);
 			}
 		}
 		return states;
@@ -166,7 +177,7 @@ public class Deliberative implements DeliberativeBehavior {
 
 		while(! q.isEmpty()) {
 			State node = q.poll();
-			q.remove(0);
+			q.remove(node);
 			if(node.isFinal()) {
 				return node;
 			}

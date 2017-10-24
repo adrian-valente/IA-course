@@ -34,11 +34,25 @@ public class State {
 		return this.city.equals(s.getCity()) && this.tasks.equals(s.getTasks()) && this.toDeliver.equals(s.getToDeliver());
 	}
 	
+	private HashSet<City> toGo(){
+		HashSet<City> cities = new HashSet<City>();
+		for(Task t: this.tasks) {
+			cities.add(t.pickupCity);
+			cities.add(t.deliveryCity);
+		}
+		for(Task t: this.toDeliver) {
+			cities.add(t.deliveryCity);
+		}
+		return cities;
+	}
+	
+	
 	/*
 	 * Our heuristic function
 	 */
 	public double distanceToFinal() {
-		if (this.tasks.isEmpty())
+		HashSet<City> cities = this.toGo();
+		if (cities.isEmpty())
 			return 0.;
 		double maxD = Double.MIN_VALUE;
 		double d = 0;
