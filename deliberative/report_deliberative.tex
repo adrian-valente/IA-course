@@ -23,7 +23,7 @@
 % Describe the state representation %
 The important factors that the agent has to take into account are the distribution of tasks (those that have not been picked up, and those that have already been picked up) and its current position. Thus our state representation will be:
 $$ (p, (t_1,\dots,t_n), (t'_1,\dots,t'_m)) $$
-where $p$ is a \texttt{City} representing the current position, $(t_1,\dots,t_n)$ is a \texttt{List<Tasks>} representing the tasks that haven't been picked up yet, and $(t'_1,\dots,t'_m)$ is also a \texttt{List<Tasks>} representing the tasks that the agent is currently transporting. To our class \texttt{State} we have added as helper variables the list of actions took from the root to the current state, and the total cost of that path.
+where $p$ is a \texttt{City} representing the current position, $(t_1,\dots,t_n)$ is a \texttt{List<Tasks>} representing the tasks that haven't been picked up yet, and $(t'_1,\dots,t'_m)$ is also a \texttt{List<Tasks>} representing the tasks that the agent is currently transporting. To our class \texttt{State} we have added as helper variables the list of actions taken from the root to the current state, and the total cost of that path.
 
 \subsection{Goal State}
 % Describe the goal state %
@@ -59,7 +59,7 @@ However, one could imagine more precise heuristics. For example we have thought 
 \subsection{Experiment 1: BFS and A* Comparison}
 % Compare the two algorithms in terms of: optimality, efficiency, limitations %
 % Report the number of tasks for which you can build a plan in less than one minute %
-First, let us note that the BFS algorithm does not always compute the optimal solution in terms of kilometers covered. Indeed, if we give it a single task to carry from Lausanne to Bern, the BFS algorithm will carry it through Neuchâtel, which is slightly more expensive than going through Fribourg.
+First, let us note that the BFS algorithm does not always compute the optimal solution in terms of kilometers covered. Indeed, if we give it a single task to carry from Lausanne to Bern, the BFS algorithm will carry it through Neuchatel, which is slightly more expensive than going through Fribourg.
 
 The difference in efficiency is staggering: while the BFS algorithm usually needs around 8 seconds to handle computations for 6 tasks, the A* algorithm finds the optimal plan in a little more than 0.5 seconds. The BFS algorithm always needs more than one minute for 7 tasks, while the A* algorithm needs a few seconds. The A* algorithm needs more than one minute for 9 tasks (tests carried on MacBookPro 2010, Intel Core 2 Duo, random seeds=1,2,3). 
 
