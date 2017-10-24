@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
@@ -151,14 +152,18 @@ public class Deliberative implements DeliberativeBehavior {
 		State init = new State(city, tasks, toDeliver, Collections.<Action>emptyList(), 0.0);
 
 		//Q = initial state
-		List<State> q = new ArrayList<State>();
+		PriorityQueue<State> q = new PriorityQueue<State>(100,new Comparator<State>() {
+			public int compare(State s1, State s2) {
+				return s1.d() < s2.d() ? -1 : s1.d() == s2.d() ? 0 : 1;
+			}
+		});
 		q.add(init);
 
 		//C are the visited states
 		List<State> c = new ArrayList<State>();
 
 		while(! q.isEmpty()) {
-			State node = q.get(0);
+			State node = q.poll();
 			q.remove(0);
 			if(node.isFinal()) {
 				return node;
@@ -177,13 +182,6 @@ public class Deliberative implements DeliberativeBehavior {
 				c.remove(cCopy);
 				c.add(node);
 				q.addAll(transit(node, v.capacity()));
-
-				//sort q
-				Collections.sort(q, new Comparator<State>() {
-					public int compare(State s1, State s2) {
-						return s1.d() < s2.d() ? -1 : s1.d() == s2.d() ? 0 : 1;
-					}
-				});
 			}
 		}
 		return null;
