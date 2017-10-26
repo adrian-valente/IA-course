@@ -26,6 +26,14 @@ public class State {
 		
 	}
 	
+	public State(State s) {
+		this.city = s.city;
+		this.tasks = s.tasks;
+		this.toDeliver = s.toDeliver;
+		this.actions = s.actions;
+		this.dist = s.dist;
+	}
+	
 	public boolean isFinal() {
 		return tasks.isEmpty() && toDeliver.isEmpty();
 	}

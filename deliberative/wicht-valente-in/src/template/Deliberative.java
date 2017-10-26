@@ -85,37 +85,40 @@ public class Deliberative implements DeliberativeBehavior {
 	public List<State> transit(State s, int capacity) {
 		List<State> states = new ArrayList<State>();
 		City c = s.getCity();
-		List<Task> carried = new ArrayList<Task>();
+		
 
 		for(Task t: s.getToDeliver()) {
 			if(t.deliveryCity.equals(c)) {
-				states.add(s.deliver(t));
-			}
-			else {
-				carried.add(t);
+				s = s.deliver(t);
 			}
 		}
+		states.add(s);
+		State state = new State(s);
+		
 		//if there is no task carried, try to move to each neighbor city
-
+		
+		int freeCharge;
+		boolean pick = false;
+		//try to pickup each task available in the current city
+		for(Task t: s.localPickupTasks()) {
+			freeCharge = capacity - s.weight();
+			if(freeCharge >= t.weight) {
+				pick = true;
+				s = s.pickup(t);
+			}
+		}
+		
 		for(City n: c.neighbors()) {
 			states.add(s.move(n));
 		}
-
-		int freeCharge = capacity - s.weight();
-		//try to pickup each task available in the current city
-		for(Task t: s.localPickupTasks()) {
-			if(freeCharge >= t.weight) {
-				states.add(s.pickup(t));
+		
+		if(pick) {
+			for(City n: c.neighbors()) {
+				states.add(state.move(n));
 			}
 		}
 
-		//for each successor state, deliver tasks if possible
-		for(State state: states) {
-			List<Task> local = state.localDeliverTask();
-			for(Task t: local) {
-				state = state.deliver(t);
-			}
-		}
+
 		return states;
 	}
 
