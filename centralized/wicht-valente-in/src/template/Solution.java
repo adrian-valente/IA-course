@@ -1,4 +1,4 @@
-package template;
+package src.template;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +85,7 @@ public class Solution {
 	}
 	
 	/*
-	 * Compute the cost of an action
+	 * Compute the cost of an solution
 	 */
 	public double cost(){
 		double cost = 0.;

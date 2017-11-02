@@ -1,4 +1,4 @@
-package template;
+package src.template;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,6 +100,25 @@ public class Centralized implements CentralizedBehavior {
 		}
 		
 		return plans;
+	}
+
+	private List<Solution> generateNeighbors(Solution curSol) {
+		Vehicle v;
+		do{
+			v = chooseVehicle(agent.vehicles());
+		}while(curSol.getNextAction(v)==null);
+		
+		
+		List<Solution> sol = new ArrayList<Solution>();
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	private Vehicle chooseVehicle(List<Vehicle> vehicles) {
+		long l = vehicles.size();
+		long r = Math.round(Math.floor(Math.random()*l));
+		
+		return vehicles.get((int) r);	
 	}
 
 }
