@@ -223,6 +223,9 @@ public class Solution {
 	 */
 	public boolean permuteActions(Vehicle v, TaskAction a1, TaskAction a2){
 		//We first verify the integrity of the desired permutation:
+		if (a1.task.equals(a2.task)){
+			return false;
+		}
 		if (a1.is_pickup){
 			if (time.get(deliveries.get(a1.task)) < time.get(a2)){
 				return false;
