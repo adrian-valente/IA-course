@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -150,5 +150,137 @@ public class Solution {
 		return deliveries;
 	}
 	
+	
+	/**
+	 * Functions to help generate neighbors
+	 */
+	/*
+	 * This function moves the task t from vehicle vsrc to the beginning of the 
+	 * plan for vehicle vdest
+	 */
+	public boolean changeVehicle(Task t, Vehicle vsrc, Vehicle vdest){
+		if (t.weight > vdest.capacity()){
+			return false;
+		}
+		
+		//First look for the pickup of the required task
+		TaskAction curAction = getNextAction(vsrc);
+		TaskAction prevAction = null;
+		while (! (curAction.task.equals(t) && curAction.is_pickup)){
+			prevAction = curAction;
+			curAction = getNextAction(curAction);
+		}
+		//We found it: so we make the necessary changes to the nextAction table
+		if (prevAction == null){
+			putNextAction(vsrc,getNextAction(curAction));
+		} else {
+			putNextAction(prevAction,getNextAction(curAction));
+		}
+		TaskAction tmpAction = getNextAction(curAction); //the current action 
+								//following curAction in vsrc's plan: we will need it later
+		putNextAction(curAction,getNextAction(vdest));
+		putNextAction(vdest,curAction);
+		//We must also update the time table for all following actions
+		time.put(curAction, 0);
+		curAction = tmpAction;
+		while(curAction != null){
+			time.put(curAction, time.get(curAction) - 1);
+			curAction = getNextAction(curAction);
+		}
+		
+		//Now we start looking for the delivery action of the required task (should be
+		//after the pickup)
+		curAction = tmpAction;
+		while (! (curAction.task.equals(t) && !curAction.is_pickup)){
+			prevAction = curAction;
+			curAction = getNextAction(curAction);
+		}
+		//We found it: we insert it in the second position of the plan of vdest
+		if (prevAction == null){
+			putNextAction(vsrc,getNextAction(curAction));
+		} else {
+			putNextAction(prevAction,getNextAction(curAction));
+		}
+		tmpAction = getNextAction(curAction);
+		putNextAction(curAction,getNextAction(getNextAction(vdest)));
+		putNextAction(getNextAction(vdest),curAction);
+		time.put(curAction, 1);
+		curAction = tmpAction;
+		while(curAction != null){
+			time.put(curAction, time.get(curAction) - 1);
+			curAction = getNextAction(curAction);
+		}
+		
+		//Finally, we need to update the vehicle table
+		vehicle.put(t, vdest);
+		
+		return true;
+		
+	}
+	
+	/*
+	 * Very important: we assume time(a1) < time(a2) !! 
+	 */
+	public boolean permuteActions(Vehicle v, TaskAction a1, TaskAction a2){
+		//We first verify the integrity of the desired permutation:
+		if (a1.is_pickup){
+			if (time.get(deliveries.get(a1.task)) < time.get(a2)){
+				return false;
+			}
+		}
+		else {
+			//Nothing to check if a1 is a delivery
+		}
+		if (a2.is_pickup){
+			//Nothing to check
+		}
+		else {
+			if (time.get(pickups.get(a2.task)) > time.get(a1)){
+				return false;
+			}
+		}
+		
+		TaskAction prevAction1 = null;
+		TaskAction nextAction1 = null;
+		TaskAction prevAction2 = null;
+		TaskAction nextAction2 = null;
+		TaskAction curAction = getNextAction(v);
+		TaskAction prevAction = null;
+		
+		boolean found1 = false;
+		boolean found2 = false;
+		while(!found1 || !found2){
+			if (curAction.equals(a1)){
+				prevAction1 = prevAction;
+				nextAction1 = getNextAction(curAction);
+				found1 = true;
+			}
+			if (curAction.equals(a2)){
+				prevAction2 = prevAction;
+				nextAction2 = getNextAction(curAction);
+				found2 = true;
+			}
+			
+			prevAction = curAction;
+			curAction = getNextAction(curAction);
+		}
+		
+		//Now we proceed to the permutation:
+		if (prevAction1 == null){ //in case a1 is the first action
+			putNextAction(v, a2);
+		} else {
+			putNextAction(prevAction1, a2);
+		}
+		putNextAction(a2, nextAction1);
+		//a2 should not be the first action
+		putNextAction(prevAction2, a1);
+		putNextAction(a1, nextAction2);
+		//update time
+		int tmp = time.get(a1);
+		time.put(a1, time.get(a2));
+		time.put(a2, tmp);
+		
+		return true;
+	}
 	
 }

@@ -1,6 +1,7 @@
-package src.template;
+package template;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import logist.LogistSettings;
@@ -109,16 +110,70 @@ public class Centralized implements CentralizedBehavior {
 		}while(curSol.getNextAction(v)==null);
 		
 		
-		List<Solution> sol = new ArrayList<Solution>();
-		// TODO Auto-generated method stub
-		return null;
+		List<Solution> neighbors = new ArrayList<Solution>();
+		
+		neighbors.addAll(changeVehicles(curSol,v));
+		
+		neighbors.addAll(changeOrderTasks(curSol,v));
+		
+		return neighbors;
 	}
 	
+	/*
+	 * Randomly chooses a vehicle
+	 */
 	private Vehicle chooseVehicle(List<Vehicle> vehicles) {
 		long l = vehicles.size();
 		long r = Math.round(Math.floor(Math.random()*l));
 		
 		return vehicles.get((int) r);	
+	}
+	
+	private List<Solution> changeVehicles(Solution curSol, Vehicle v0) {
+		TaskAction curAction = curSol.getNextAction(v0);
+		List<Solution> res = new ArrayList<Solution>();
+		
+		// For each task carried by v0
+		while (curAction != null){
+			if (curAction.is_pickup){
+				
+				//Try to give it to each other vehicle
+				for (Vehicle v: agent.vehicles()){
+					if (! v.equals(v0)){
+						Solution newSol = new Solution(curSol);
+						if (newSol.changeVehicle(curAction.task, v0, v)){
+							res.add(newSol);
+						}
+						
+					}
+				}
+				
+			}
+		}
+		
+		return res;
+	}
+	
+	private List<Solution> changeOrderTasks(Solution curSol, Vehicle v0) {
+		List<Solution> res = new ArrayList<Solution>();
+		
+		//We generate a list from the NextAction table
+		List<TaskAction> listActions = new ArrayList<TaskAction>();
+		TaskAction curAction = curSol.getNextAction(v0);
+		while(curAction != null){
+			listActions.add(curAction);
+			curAction = curSol.getNextAction(curAction);
+		}
+		
+		for (int i=0; i<listActions.size(); i++){
+			for (int j=i+1; j<listActions.size(); j++){
+				Solution newSol = new Solution(curSol);
+				if (newSol.permuteActions(v0, listActions.get(i), listActions.get(j))){
+					res.add(newSol);
+				}
+			}
+		}
+		return res;
 	}
 
 }
