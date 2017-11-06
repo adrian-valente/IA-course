@@ -55,9 +55,8 @@ public class Centralized implements CentralizedBehavior {
 		Solution curSol = new Solution(vehicles, tasks);
 		double curCost = curSol.cost();
 		boolean cont = true;
-		int nb = 0;
 		
-		while(cont || nb<1){
+		while(cont){
 			List<Solution> neighbors = generateNeighbors(curSol);
 			//Get the best solution:
 			double min = Double.MAX_VALUE;
@@ -72,10 +71,7 @@ public class Centralized implements CentralizedBehavior {
 			System.out.println(min);
 			if (min >= curCost){
 				cont = false;
-				nb++;
 			} else {
-				cont = true;
-				nb = 0;
 				curCost = min;
 				curSol = argmin;
 			}

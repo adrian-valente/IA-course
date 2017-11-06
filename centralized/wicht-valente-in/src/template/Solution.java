@@ -10,7 +10,7 @@ import logist.simulation.Vehicle;
 
 
 public class Solution {
-	
+
 	private HashMap<Vehicle,TaskAction> nextActionVehicles;
 	private HashMap<TaskAction,TaskAction> nextActionTasks;
 	private HashMap<TaskAction,Integer> time;
@@ -18,7 +18,7 @@ public class Solution {
 	//These two are helpers to map between Tasks and TaskActions
 	private HashMap<Task,TaskAction> pickups;
 	private HashMap<Task,TaskAction> deliveries;
-	
+
 	/*
 	 * This constructor builds a naive solution by giving everything to the first vehicle
 	 * in naive order
@@ -31,7 +31,7 @@ public class Solution {
 			pickups.put(t, new TaskAction(true, t));
 			deliveries.put(t, new TaskAction(false, t));
 		}
-		
+
 		//Then give everything in order to the first vehicle
 		//Building HashMaps
 		nextActionVehicles = new HashMap<Vehicle,TaskAction>();
@@ -41,35 +41,38 @@ public class Solution {
 		//Putting tasks
 		//First task is different : we first map from Vehicle to TaskAction
 		List<List<Task>> divided = divideTasks(tasks, vehicles.size());
-		
+
 		for(int j = 0; j< vehicles.size(); j++) {
 			List<Task> tasksList = divided.get(j);
+			if(tasksList.size() == 0) {
+				continue;
+			}
 			Vehicle v = vehicles.get(j);
 			TaskAction curAction = pickups.get(tasksList.get(0));
 			this.putNextAction(v, curAction);
 			time.put(curAction, new Integer(0));
 			vehicle.put(curAction.task, v);
-			
+
 			this.putNextAction(curAction, deliveries.get(tasksList.get(0)));
 			curAction = deliveries.get(tasksList.get(0));
 			time.put(curAction, new Integer(1));
 			vehicle.put(curAction.task, v);
-			
+
 			for (int i=1; i<tasksList.size(); i++){
 				this.putNextAction(curAction, pickups.get(tasksList.get(i)));
 				curAction = pickups.get(tasksList.get(i));
 				time.put(curAction, new Integer(2*i));
 				vehicle.put(curAction.task, v);
-				
+
 				this.putNextAction(curAction, deliveries.get(tasksList.get(i)));
 				curAction = deliveries.get(tasksList.get(i));
 				time.put(curAction, new Integer(2*i+1));
 				vehicle.put(curAction.task, v);
 			}
 		}
-		
+
 	}
-	
+
 	/*
 	 * This constructor creates a copy of a Solution instance
 	 */
@@ -81,7 +84,7 @@ public class Solution {
 		this.pickups = sol.getPickups();
 		this.deliveries = sol.getDeliveries();
 	}
-	
+
 	/*
 	 * Compute the cost of an solution
 	 */
@@ -101,25 +104,25 @@ public class Solution {
 		}
 		return cost;
 	}
-	
-	
-	
+
+
+
 	/*
 	 * GETTERS AND SETTERS
 	 */
-	
+
 	public TaskAction getNextAction(Vehicle v){
 		return nextActionVehicles.get(v);
 	}
-	
+
 	public TaskAction getNextAction(TaskAction t){
 		return nextActionTasks.get(t);
 	}
-	
+
 	public void putNextAction(Vehicle v, TaskAction t){
 		this.nextActionVehicles.put(v,t);
 	}
-	
+
 	public void putNextAction(TaskAction t1, TaskAction t2){
 		this.nextActionTasks.put(t1,t2);
 	}
@@ -147,8 +150,8 @@ public class Solution {
 	public HashMap<Task, TaskAction> getDeliveries() {
 		return deliveries;
 	}
-	
-	
+
+
 	/**
 	 * Functions to help generate neighbors
 	 */
@@ -160,7 +163,7 @@ public class Solution {
 		if (t.weight > vdest.capacity()){
 			return false;
 		}
-		
+
 		//First look for the pickup of the required task
 		TaskAction curAction = getNextAction(vsrc);
 		TaskAction prevAction = null;
@@ -175,7 +178,7 @@ public class Solution {
 			putNextAction(prevAction,getNextAction(curAction));
 		}
 		TaskAction tmpAction = getNextAction(curAction); //the current action 
-								//following curAction in vsrc's plan: we will need it later
+		//following curAction in vsrc's plan: we will need it later
 		putNextAction(curAction,getNextAction(vdest));
 		putNextAction(vdest,curAction);
 		//We must also update the time table for all following actions
@@ -185,14 +188,17 @@ public class Solution {
 			time.put(curAction, time.get(curAction) - 1);
 			curAction = getNextAction(curAction);
 		}
-		
+
 		//Now we start looking for the delivery action of the required task (should be
 		//after the pickup)
 		curAction = tmpAction;
 		while (! (curAction.task.equals(t) && !curAction.is_pickup)){
 			prevAction = curAction;
 			curAction = getNextAction(curAction);
-		}
+			if(curAction == null) {
+				break;
+			}
+		}	
 		//We found it: we insert it in the second position of the plan of vdest
 		if (prevAction == null){
 			putNextAction(vsrc,getNextAction(curAction));
@@ -208,14 +214,14 @@ public class Solution {
 			time.put(curAction, time.get(curAction) - 1);
 			curAction = getNextAction(curAction);
 		}
-		
+
 		//Finally, we need to update the vehicle table
 		vehicle.put(t, vdest);
-		
+
 		return true;
-		
+
 	}
-	
+
 	/*
 	 * Very important: we assume time(a1) < time(a2) !! 
 	 */
@@ -228,26 +234,31 @@ public class Solution {
 			if (time.get(deliveries.get(a1.task)) < time.get(a2)){
 				return false;
 			}
+			if(weightAtTime(time.get(a2), v) + a1.task.weight > v.capacity()) {
+				return false;
+			}
 		}
 		else {
 			//Nothing to check if a1 is a delivery
 		}
 		if (a2.is_pickup){
-			//Nothing to check
+			if(weightAtTime(time.get(a1), v) + a2.task.weight > v.capacity()) {
+				return false;
+			}
 		}
 		else {
 			if (time.get(pickups.get(a2.task)) > time.get(a1)){
 				return false;
 			}
 		}
-		
+
 		TaskAction prevAction1 = null;
 		TaskAction nextAction1 = null;
 		TaskAction prevAction2 = null;
 		TaskAction nextAction2 = null;
 		TaskAction curAction = getNextAction(v);
 		TaskAction prevAction = null;
-		
+
 		boolean found1 = false;
 		boolean found2 = false;
 		while(!found1 || !found2){
@@ -261,11 +272,11 @@ public class Solution {
 				nextAction2 = getNextAction(curAction);
 				found2 = true;
 			}
-			
+
 			prevAction = curAction;
 			curAction = getNextAction(curAction);
 		}
-		
+
 		//Now we proceed to the permutation:
 		if (prevAction1 == null){ //in case a1 is the first action
 			putNextAction(v, a2);
@@ -287,16 +298,16 @@ public class Solution {
 		int tmp = time.get(a1);
 		time.put(a1, time.get(a2));
 		time.put(a2, tmp);
-		
+
 		return true;
 	}
-	
+
 	private List<List<Task>> divideTasks(TaskSet tasks, int i){
 		List<List<Task>> res = new ArrayList<List<Task>>();
 		for(int j = 0; j< i; ++j) {
 			res.add(new ArrayList<Task>());
 		}
-		
+
 		for(Task t: tasks) {
 			int pos = (int) Math.round(Math.floor(Math.random()*i));
 			res.get(pos).add(t);
@@ -304,4 +315,21 @@ public class Solution {
 		return res;
 	}
 	
+	private int weightAtTime(int t, Vehicle v) {
+		int i = 0;
+		TaskAction task = getNextAction(v);
+		int w = 0;
+		while(i < t) {
+			if(task.is_pickup) {
+				w += task.task.weight;
+			}
+			else {
+				w -= task.task.weight;
+			}
+			++i;
+			task = getNextAction(task);
+		}
+		return w;
+	}
+
 }
