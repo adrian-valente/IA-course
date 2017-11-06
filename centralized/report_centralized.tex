@@ -1,0 +1,93 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath}
+\usepackage{textcomp}
+
+% Add other packages here %
+
+
+% Put your group number and names in the author field %
+\title{\bf Excercise 4\\ Implementing a centralized agent}
+\author{Group \textnumero 4: Bruno \textsc{Wicht}, Adrian \textsc{Valente}}
+
+
+% N.B.: The report should not be longer than 3 pages %
+
+
+\begin{document}
+\maketitle
+
+\section{Solution Representation}
+
+\subsection{Variables}
+% Describe the variables used in your solution representation %
+Let us first define a notion that we use in our solution: we call a TaskAction an action that is either a pickup or a delivery. A TaskAction is thus defined by its corresponding task, and a boolean specifying if it is a pickup or not. Obviously, if there are $N_T$ tasks there are $2N_T$ TaskActions.\\
+We have used the following variables:
+\begin{itemize}
+\item An array $nextAction$ of $N_V+2N_T$ entries (one for each vehicle, and one for each TaskAction) mapping from a TaskAction to the next or to $NULL$, and from a vehicle to its first TaskAction.
+\item An array $time$ of $2N_T$ entries mapping from each TaskAction to the position in which it is treated by its vehicle.
+\item An array $vehicle$ of $2N_T$, mapping from each TaskAction to the vehicle that treats it.
+\item Two arrays $deliver$ and $pickup$ of $N_T$ entries each mapping from a task to the TaskActions corresponding to its pickup and delivery.
+\end{itemize}
+
+\subsection{Constraints}
+% Describe the constraints in your solution representation %
+The constraints are the same as those specified in the slides, to which we add the following constraint (expressing the fact that a pickup should happen before a delivery, and that both actions must be done by the same vehicle):
+\begin{equation}\label{constraint}
+\begin{split}
+& (a_j = deliver(t_i)) \land (a_k = pickup(t_i)) \\
+& \Rightarrow (time(a_j) > time(a_k)) \land (vehicle(a_j) = vehicle(a_k))
+\end{split}
+\end{equation}
+
+\subsection{Objective function}
+% Describe the function that you optimize %
+The function that we optimise is the total cost of a solution, that is the sum of the distances that each vehicle should travel during its plan:
+\begin{equation*}
+\begin{split}
+C = &\sum_{i=1}^{2*N_T}(dist(a_i,nextAction(a_i))\cdot cost(vehicle(a_i)) \\
+ &\quad + \sum_{i=1}^{N_V}(dist(initialCity(v_i),nextAction(v_i))\cdot cost(vehicle(a_i))
+\end{split}
+\end{equation*}
+
+
+\section{Stochastic optimization}
+
+\subsection{Initial solution}
+% Describe how you generate the initial solution %
+We have first tried to do as in the slides and give all tasks to the first vehicle for the inital solution. However, we found that it was not a good starting point, since it didn't lead to a very good solution. Instead, we start by a random solution: we randomly assign each task to a vehicle, and each vehicle carries the tasks that have been assigned to it in order (by delivering a task before picking up another).
+
+\subsection{Generating neighbours}
+% Describe how you generate neighbors %
+In order to generate neighbors of a solution $sol$, we first randomly select a vehicle $v$ such that $nextAction(v) \neq NULL$, and then apply 2 primitives: $changeVehicle(sol,v)$ and $changeTaskOrder(sol,v)$.\\
+The neighbors returned by $changeVehicle(sol,v)$ are all the solutions where one task carried by $v$ is given to another vehicle (which picks it up and delivers it before carrying out the rest of its plan).\\
+The neighbors returned by $changeTaskOrder(sol,v)$ are all the consistent solutions where two actions in the plan of $v$ are permuted. The primitive tries out all permutations and returns only those who satisfy to the constraint \eqref{constraint}.
+
+\subsection{Stochastic optimization algorithm}
+% Describe your stochastic optimization algorithm %
+Our stochastic optimization process follows the algorithm specified in the slides, the termination condition being that no improvement is seen among all neighbors generated (no neighbor with a smaller cost than the current cost is found). However, we found that this condition was rather harsh given that the neighbor generation is stochastic and can result in a low number of neighbors, especially when there are few tasks. As a consequence, we modified the termination condition so that the algorithm stops when no improvement is seen in at most $n$ calls to $generateNeighbors$, $n$ being a fixed parameter. 
+
+\section{Results}
+
+\subsection{Experiment 1: Model parameters}
+% if your model has parameters, perform an experiment and analyze the results for different parameter values %
+
+\subsubsection{Setting}
+% Describe the settings of your experiment: topology, task configuration, number of tasks, number of vehicles, etc. %
+% and the parameters you are analyzing %
+
+\subsubsection{Observations}
+% Describe the experimental results and the conclusions you inferred from these results %
+
+\subsection{Experiment 2: Different configurations}
+% Run simulations for different configurations of the environment (i.e. different tasks and number of vehicles) %
+
+\subsubsection{Setting}
+% Describe the settings of your experiment: topology, task configuration, number of tasks, number of vehicles, etc. %
+
+\subsubsection{Observations}
+% Describe the experimental results and the conclusions you inferred from these results %
+% Reflect on the fairness of the optimal plans. Observe that optimality requires some vehicles to do more work than others. %
+% How does the complexity of your algorithm depend on the number of vehicles and various sizes of the task set? %
+
+\end{document}
