@@ -1,4 +1,4 @@
-package template;
+package src.template;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -55,23 +55,27 @@ public class Centralized implements CentralizedBehavior {
 		Solution curSol = new Solution(vehicles, tasks);
 		double curCost = curSol.cost();
 		boolean cont = true;
+		int nb = 0;
 		
-		while(cont){
+		while(cont || nb<1){
 			List<Solution> neighbors = generateNeighbors(curSol);
-			
 			//Get the best solution:
 			double min = Double.MAX_VALUE;
 			Solution argmin = null;
+
 			for (Solution sol : neighbors){
 				if (sol.cost() < min){
 					min = sol.cost();
 					argmin = sol;
 				}
 			}
-			
+			System.out.println(min);
 			if (min >= curCost){
 				cont = false;
+				nb++;
 			} else {
+				cont = true;
+				nb = 0;
 				curCost = min;
 				curSol = argmin;
 			}
@@ -105,16 +109,14 @@ public class Centralized implements CentralizedBehavior {
 
 	private List<Solution> generateNeighbors(Solution curSol) {
 		Vehicle v;
-		do{
+		do {
 			v = chooseVehicle(agent.vehicles());
-		}while(curSol.getNextAction(v)==null);
-		
+		}while(curSol.getNextAction(v) == null);
 		
 		List<Solution> neighbors = new ArrayList<Solution>();
-		
 		neighbors.addAll(changeVehicles(curSol,v));
-		
 		neighbors.addAll(changeOrderTasks(curSol,v));
+		System.out.println(neighbors.size());
 		
 		return neighbors;
 	}
@@ -149,6 +151,7 @@ public class Centralized implements CentralizedBehavior {
 				}
 				
 			}
+			curAction = curSol.getNextAction(curAction);
 		}
 		
 		return res;

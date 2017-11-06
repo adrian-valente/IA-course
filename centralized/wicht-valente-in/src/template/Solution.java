@@ -1,4 +1,4 @@
-package template;
+package src.template;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,36 +38,34 @@ public class Solution {
 		nextActionTasks = new HashMap<TaskAction,TaskAction>();
 		time = new HashMap<TaskAction,Integer>();
 		vehicle = new HashMap<Task,Vehicle>();
-		List<Task> tasksList = new ArrayList<Task>(tasks);
 		//Putting tasks
 		//First task is different : we first map from Vehicle to TaskAction
-		Vehicle vehicle0 = vehicles.get(0);
-		TaskAction curAction = pickups.get(tasksList.get(0));
-		this.putNextAction(vehicle0, curAction);
-		time.put(curAction, new Integer(0));
-		vehicle.put(curAction.task, vehicle0);
+		List<List<Task>> divided = divideTasks(tasks, vehicles.size());
 		
-		this.putNextAction(curAction, deliveries.get(tasksList.get(0)));
-		curAction = deliveries.get(tasksList.get(0));
-		time.put(curAction, new Integer(1));
-		vehicle.put(curAction.task, vehicle0);
-		
-		for (int i=1; i<tasksList.size(); i++){
-			this.putNextAction(curAction, pickups.get(tasksList.get(i)));
-			curAction = pickups.get(tasksList.get(i));
-			time.put(curAction, new Integer(2*i));
-			vehicle.put(curAction.task, vehicle0);
+		for(int j = 0; j< vehicles.size(); j++) {
+			List<Task> tasksList = divided.get(j);
+			Vehicle v = vehicles.get(j);
+			TaskAction curAction = pickups.get(tasksList.get(0));
+			this.putNextAction(v, curAction);
+			time.put(curAction, new Integer(0));
+			vehicle.put(curAction.task, v);
 			
 			this.putNextAction(curAction, deliveries.get(tasksList.get(0)));
 			curAction = deliveries.get(tasksList.get(0));
-			time.put(curAction, new Integer(2*i+1));
-			vehicle.put(curAction.task, vehicle0);
-		}
-		this.putNextAction(curAction, null);
-		
-		//Finally, put null for other vehicles.
-		for (Vehicle v : vehicles){
-			this.putNextAction(v, null);
+			time.put(curAction, new Integer(1));
+			vehicle.put(curAction.task, v);
+			
+			for (int i=1; i<tasksList.size(); i++){
+				this.putNextAction(curAction, pickups.get(tasksList.get(i)));
+				curAction = pickups.get(tasksList.get(i));
+				time.put(curAction, new Integer(2*i));
+				vehicle.put(curAction.task, v);
+				
+				this.putNextAction(curAction, deliveries.get(tasksList.get(i)));
+				curAction = deliveries.get(tasksList.get(i));
+				time.put(curAction, new Integer(2*i+1));
+				vehicle.put(curAction.task, v);
+			}
 		}
 		
 	}
@@ -274,9 +272,16 @@ public class Solution {
 		} else {
 			putNextAction(prevAction1, a2);
 		}
-		putNextAction(a2, nextAction1);
+		if(nextAction1.equals(a2)) {
+			putNextAction(a2,a1);
+		}
+		else {
+			putNextAction(a2, nextAction1);
+		}
 		//a2 should not be the first action
-		putNextAction(prevAction2, a1);
+		if(!prevAction2.equals(a1)) {
+			putNextAction(prevAction2, a1);
+		}
 		putNextAction(a1, nextAction2);
 		//update time
 		int tmp = time.get(a1);
@@ -284,6 +289,19 @@ public class Solution {
 		time.put(a2, tmp);
 		
 		return true;
+	}
+	
+	private List<List<Task>> divideTasks(TaskSet tasks, int i){
+		List<List<Task>> res = new ArrayList<List<Task>>();
+		for(int j = 0; j< i; ++j) {
+			res.add(new ArrayList<Task>());
+		}
+		
+		for(Task t: tasks) {
+			int pos = (int) Math.round(Math.floor(Math.random()*i));
+			res.get(pos).add(t);
+		}
+		return res;
 	}
 	
 }
