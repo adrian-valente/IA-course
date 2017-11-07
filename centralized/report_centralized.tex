@@ -65,7 +65,7 @@ The neighbors returned by $changeTaskOrder(sol,v)$ are all the consistent soluti
 
 \subsection{Stochastic optimization algorithm}
 % Describe your stochastic optimization algorithm %
-Our stochastic optimization process follows the algorithm specified in the slides, the termination condition being that no improvement is seen among all neighbors generated (no neighbor with a smaller cost than the current cost is found). However, we found that this condition was rather harsh given that the neighbor generation is stochastic and can result in a low number of neighbors, especially when there are few tasks. As a consequence, we modified the termination condition so that the algorithm stops when no improvement is seen in at most $n$ calls to $generateNeighbors$, $n$ being a fixed parameter. 
+Our stochastic optimization process follows the algorithm specified in the slides, the termination condition being that no improvement is seen among all neighbors generated (no neighbor with a smaller cost than the current cost is found). However, we found that this condition was rather harsh given that the neighbor generation is stochastic and can result in a low number of neighbors, especially when there are few tasks. As a consequence, we modified the termination condition so that the algorithm stops when no improvement is seen in at most $NMAX$ calls to $generateNeighbors$, $NMAX$ being a fixed parameter. 
 
 \section{Results}
 
@@ -75,19 +75,24 @@ Our stochastic optimization process follows the algorithm specified in the slide
 \subsubsection{Setting}
 % Describe the settings of your experiment: topology, task configuration, number of tasks, number of vehicles, etc. %
 % and the parameters you are analyzing %
+We will be using the English topology, with 30 tasks and 4 vehicles (and random seeds 12345 and 54321). The only parameter that we will analyze is $NMAX$, which controls the termination condition of our algorithm.
 
 \subsubsection{Observations}
 % Describe the experimental results and the conclusions you inferred from these results %
+Let us be blunt: the idea of calling $generateNeighbors$ several times does not bring much improvement: indeed, with $NMAX = 4$ we observed a total cost of $7234 \pm 955$ with $35 \pm 10$ iterations, while with $NMAX = 1$ we observed a total cost of $8359 \pm 1349$ and $17 \pm 6$. So there is an improvement if $NMAX$ is increased, but it is a very limited one, given that the computation time is doubled. That makes us think that the problem may not be of finding a minimum, but of not getting stuck in a local minimum, which appears to be the main factor for excessive costs.
+
 
 \subsection{Experiment 2: Different configurations}
 % Run simulations for different configurations of the environment (i.e. different tasks and number of vehicles) %
 
 \subsubsection{Setting}
 % Describe the settings of your experiment: topology, task configuration, number of tasks, number of vehicles, etc. %
+We will try our method with the English topology, with 10, 30 and 50 tasks, and 4 and 2 vehicles. 
 
 \subsubsection{Observations}
 % Describe the experimental results and the conclusions you inferred from these results %
 % Reflect on the fairness of the optimal plans. Observe that optimality requires some vehicles to do more work than others. %
 % How does the complexity of your algorithm depend on the number of vehicles and various sizes of the task set? %
+With 4 vehicles: we observe a typical cost of $3892 \pm 568$ with 10 tasks (computation time: $36 \pm 11$ ms), $7703 \pm 404$ with 30 tasks ($311 \pm 51$ ms) , and $18568 \pm 1277$ with 50 tasks ($538 \pm 133$ ms). There are huge disparities between the cost of each vehicle, but that is not necessarily a bad thing, since that can also be the case in the optimum. With 2 vehicles, let us simply say that the cost is a little higher.
 
 \end{document}

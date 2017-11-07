@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,6 +104,27 @@ public class Solution {
 		}
 		return cost;
 	}
+	
+	public double[] costsperVehicle(){
+		double[] costs = new double[nextActionVehicles.size()];
+		int i = 0;
+		for (Vehicle v : this.nextActionVehicles.keySet()){
+			double cost = 0.;
+			TaskAction curAction = nextActionVehicles.get(v);
+			if (curAction == null)
+				continue;
+			cost += v.getCurrentCity().distanceTo(curAction.city);
+			TaskAction nextAction = this.nextActionTasks.get(curAction);
+			while (nextAction != null){
+				cost += curAction.city.distanceTo(nextAction.city);
+				curAction = nextAction;
+				nextAction = this.nextActionTasks.get(curAction);
+			}
+			costs[i] = cost;
+			i++;
+		}
+		return costs;
+	}
 
 
 
@@ -172,13 +193,13 @@ public class Solution {
 			curAction = getNextAction(curAction);
 		}
 		//We found it: so we make the necessary changes to the nextAction table
-		if (prevAction == null){
-			putNextAction(vsrc,getNextAction(curAction));
-		} else {
-			putNextAction(prevAction,getNextAction(curAction));
-		}
-		TaskAction tmpAction = getNextAction(curAction); //the current action 
+		TaskAction tmpAction = getNextAction(curAction); //the action 
 		//following curAction in vsrc's plan: we will need it later
+		if (prevAction == null){
+			putNextAction(vsrc,tmpAction);
+		} else {
+			putNextAction(prevAction,tmpAction);
+		}
 		putNextAction(curAction,getNextAction(vdest));
 		putNextAction(vdest,curAction);
 		//We must also update the time table for all following actions
@@ -195,10 +216,7 @@ public class Solution {
 		while (! (curAction.task.equals(t) && !curAction.is_pickup)){
 			prevAction = curAction;
 			curAction = getNextAction(curAction);
-			if(curAction == null) {
-				break;
-			}
-		}	
+		}
 		//We found it: we insert it in the second position of the plan of vdest
 		if (prevAction == null){
 			putNextAction(vsrc,getNextAction(curAction));
@@ -214,6 +232,11 @@ public class Solution {
 			time.put(curAction, time.get(curAction) - 1);
 			curAction = getNextAction(curAction);
 		}
+		curAction = getNextAction(getNextAction(getNextAction(vdest)));
+		while(curAction != null){
+			time.put(curAction, time.get(curAction) + 2);
+			curAction = getNextAction(curAction);
+		}
 
 		//Finally, we need to update the vehicle table
 		vehicle.put(t, vdest);
@@ -223,6 +246,8 @@ public class Solution {
 	}
 
 	/*
+	 * Function to permute two actions in the plan of vehicle v
+	 * Returns true if this permutation is in agreement with the constraints, false otherwise
 	 * Very important: we assume time(a1) < time(a2) !! 
 	 */
 	public boolean permuteActions(Vehicle v, TaskAction a1, TaskAction a2){
@@ -259,6 +284,7 @@ public class Solution {
 		TaskAction curAction = getNextAction(v);
 		TaskAction prevAction = null;
 
+		//Find the two actions and the actions surrounding them
 		boolean found1 = false;
 		boolean found2 = false;
 		while(!found1 || !found2){
@@ -283,14 +309,11 @@ public class Solution {
 		} else {
 			putNextAction(prevAction1, a2);
 		}
-		if(nextAction1.equals(a2)) {
+		if(nextAction1.equals(a2)) {  //in case a1 and a2 follow each other
 			putNextAction(a2,a1);
 		}
 		else {
 			putNextAction(a2, nextAction1);
-		}
-		//a2 should not be the first action
-		if(!prevAction2.equals(a1)) {
 			putNextAction(prevAction2, a1);
 		}
 		putNextAction(a1, nextAction2);
@@ -299,6 +322,20 @@ public class Solution {
 		time.put(a1, time.get(a2));
 		time.put(a2, tmp);
 
+		//Finally, check weights
+		curAction = getNextAction(v);
+		int w = 0;
+		while (curAction != null){
+			if (curAction.is_pickup){
+				w += curAction.task.weight;
+			} else {
+				w -= curAction.task.weight;
+			}
+			if (w > v.capacity()){
+				return false;
+			}
+		}
+		
 		return true;
 	}
 
@@ -331,5 +368,6 @@ public class Solution {
 		}
 		return w;
 	}
+
 
 }

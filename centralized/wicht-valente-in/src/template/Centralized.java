@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -22,6 +22,8 @@ public class Centralized implements CentralizedBehavior {
     private Agent agent;
     private long timeout_setup;
     private long timeout_plan;
+    
+    private static int NMAX = 5;
 
 	@Override
 	public void setup(Topology topology, TaskDistribution distribution,
@@ -31,7 +33,7 @@ public class Centralized implements CentralizedBehavior {
 		// this code is used to get the timeouts
         LogistSettings ls = null;
         try {
-            ls = Parsers.parseSettings("config\\settings_default.xml");
+            ls = Parsers.parseSettings("config/settings_default.xml");
         }
         catch (Exception exc) {
             System.out.println("There was a problem loading the configuration file.");
@@ -50,14 +52,18 @@ public class Centralized implements CentralizedBehavior {
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
+		long debut = System.currentTimeMillis();
 		
 		//Build initial solution
 		Solution curSol = new Solution(vehicles, tasks);
 		double curCost = curSol.cost();
-		boolean cont = true;
+		boolean stop = false;
+		int nTries = 0;
+		int iterations = 0;
 		
-		while(cont){
+		while(!stop){
 			List<Solution> neighbors = generateNeighbors(curSol);
+			iterations++;
 			//Get the best solution:
 			double min = Double.MAX_VALUE;
 			Solution argmin = null;
@@ -70,10 +76,13 @@ public class Centralized implements CentralizedBehavior {
 			}
 			System.out.println(min);
 			if (min >= curCost){
-				cont = false;
+				nTries++;
+				if (nTries >= NMAX)
+					stop = true;
 			} else {
 				curCost = min;
 				curSol = argmin;
+				nTries = 0;
 			}
 		}
 		
@@ -100,6 +109,15 @@ public class Centralized implements CentralizedBehavior {
 			plans.add(plan);
 		}
 		
+		System.out.println("Final solution:");
+		System.out.println("Cost: "+curCost);
+		System.out.println("Costs per vehicle: ");
+		double[] costs = curSol.costsperVehicle();
+		for (int i = 0; i < costs.length; i++){
+			System.out.print(costs[i]+", ");
+		}
+		System.out.println("\n"+iterations+" iterations");
+		System.out.println("Computation time: "+(System.currentTimeMillis() - debut));
 		return plans;
 	}
 
@@ -112,8 +130,6 @@ public class Centralized implements CentralizedBehavior {
 		List<Solution> neighbors = new ArrayList<Solution>();
 		neighbors.addAll(changeVehicles(curSol,v));
 		neighbors.addAll(changeOrderTasks(curSol,v));
-		System.out.println(neighbors.size());
-		
 		return neighbors;
 	}
 	

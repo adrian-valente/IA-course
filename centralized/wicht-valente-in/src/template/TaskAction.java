@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import logist.task.Task;
 import logist.topology.Topology.City;
@@ -21,5 +21,9 @@ public class TaskAction {
 			this.city = task.deliveryCity;
 		}
 	}	
+	
+	public String toString(){
+		return ((is_pickup)? "pickup" : "delivery") + task.toString();
+	}
 
 }
