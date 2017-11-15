@@ -49,6 +49,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		if (winner == agent.id()) {
 			currentCity = previous.deliveryCity;
+			System.out.println("Task "+previous+" won by "+winner);
 		}
 	}
 	
@@ -66,6 +67,10 @@ public class AuctionTemplate implements AuctionBehavior {
 
 		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
 		double bid = ratio * marginalCost;
+		
+		System.out.println("[Agent "+agent.id()+"] Task "+task+" bid at "+bid);
+		System.out.println("[DEBUG] ratio"+ratio);
+		System.out.println("[Agent "+agent.id()+"] can realise a profit of "+(bid-marginalCost));
 
 		return (long) Math.round(bid);
 	}
