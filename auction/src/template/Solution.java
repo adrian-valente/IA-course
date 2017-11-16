@@ -95,10 +95,10 @@ public class Solution {
 			TaskAction curAction = nextActionVehicles.get(v);
 			if (curAction == null)
 				continue;
-			cost += v.getCurrentCity().distanceTo(curAction.city);
+			cost += v.getCurrentCity().distanceTo(curAction.city) * v.costPerKm();
 			TaskAction nextAction = this.nextActionTasks.get(curAction);
 			while (nextAction != null){
-				cost += curAction.city.distanceTo(nextAction.city);
+				cost += curAction.city.distanceTo(nextAction.city) * v.costPerKm();
 				curAction = nextAction;
 				nextAction = this.nextActionTasks.get(curAction);
 			}

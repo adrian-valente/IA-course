@@ -30,8 +30,10 @@ public class AuctionSimple implements AuctionBehavior {
 	private Vehicle vehicle;
 	private City currentCity;
 	private double curCost;
+	private double curMoney;
 	private List<Task> tasks;
 	private double costLastBid;
+	private double valueLastBid;
 	private long timeout_bid;
 	
 	private static int NMAX = 5;
@@ -68,6 +70,8 @@ public class AuctionSimple implements AuctionBehavior {
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		if (winner == agent.id()) {
 			curCost = costLastBid;
+			curMoney += valueLastBid;
+			tasks.add(previous);
 			System.out.println("Task "+previous+" won by "+winner);
 		}
 	}
@@ -85,12 +89,14 @@ public class AuctionSimple implements AuctionBehavior {
 		List<Task> tasks = new ArrayList<Task>(this.tasks);
 		tasks.add(task);
 		Solution bestSolution = findBestSolution(agent.vehicles(), tasks);
-		this.costLastBid = bestSolution.cost() * vehicle.costPerKm();
+		this.costLastBid = bestSolution.cost();
 		
 		double marginalCost = max(this.costLastBid - this.curCost, 0.);
 
-		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
+		double ratio = 1.0 + (random.nextDouble() * 0.1 * task.id);
 		double bid = ratio * marginalCost;
+		
+		valueLastBid = bid;
 		
 		System.out.println("[Agent "+agent.id()+"] Task "+task+" bid at "+bid+" cost of "+marginalCost);
 		System.out.println("[DEBUG] ratio"+ratio);
@@ -129,12 +135,8 @@ public class AuctionSimple implements AuctionBehavior {
 		}
 		
 		System.out.println("Final solution:");
-		System.out.println("Cost: "+curCost);
-		System.out.println("Costs per vehicle: ");
-		double[] costs = curSol.costsperVehicle();
-		for (int i = 0; i < costs.length; i++){
-			System.out.print(costs[i]+", ");
-		}
+		System.out.println("Cost: "+curSol.cost());
+		System.out.println("Money earned: "+curMoney);
 		System.out.println("Computation time: "+(System.currentTimeMillis() - debut));
 		return plans;
 	}
@@ -160,7 +162,6 @@ public class AuctionSimple implements AuctionBehavior {
 					argmin = sol;
 				}
 			}
-			System.out.println(min);
 			if (min >= curCost){
 				nTries++;
 				if (nTries >= NMAX)
