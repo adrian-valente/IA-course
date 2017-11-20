@@ -142,38 +142,52 @@ public class AuctionSimple implements AuctionBehavior {
 	}
 	
 	private Solution findBestSolution(List<Vehicle> vehicles, Collection<Task> tasks){
+		long start = System.currentTimeMillis();
 		//Build initial solution
-		Solution curSol = new Solution(vehicles, tasks);
-		double curCost = curSol.cost();
+		Solution curSol = null;
+		double curCost = 0;
+		Solution bestSol = null;
+		double bestCost = Double.MAX_VALUE;
 		boolean stop = false;
 		int nTries = 0;
 		int iterations = 0;
 		
-		while(!stop){
-			List<Solution> neighbors = generateNeighbors(curSol);
-			iterations++;
-			//Get the best solution:
-			double min = Double.MAX_VALUE;
-			Solution argmin = null;
-
-			for (Solution sol : neighbors){
-				if (sol.cost() < min){
-					min = sol.cost();
-					argmin = sol;
+		while (System.currentTimeMillis() - start < this.timeout_bid - 1000){
+			stop = false;
+			curSol = new Solution(vehicles, tasks);
+			curCost = curSol.cost();
+			
+			while(!stop && (System.currentTimeMillis() - start < this.timeout_bid - 1000)){
+				List<Solution> neighbors = generateNeighbors(curSol);
+				iterations++;
+				//Get the best solution:
+				double min = Double.MAX_VALUE;
+				Solution argmin = null;
+	
+				for (Solution sol : neighbors){
+					if (sol.cost() < min){
+						min = sol.cost();
+						argmin = sol;
+					}
+				}
+				if (min >= curCost){
+					nTries++;
+					if (nTries >= NMAX)
+						stop = true;
+				} else {
+					curCost = min;
+					curSol = argmin;
+					nTries = 0;
 				}
 			}
-			if (min >= curCost){
-				nTries++;
-				if (nTries >= NMAX)
-					stop = true;
-			} else {
-				curCost = min;
-				curSol = argmin;
-				nTries = 0;
+			
+			if (curCost < bestCost){
+				bestSol = curSol;
+				curCost = bestCost;
 			}
 		}
 		
-		return curSol;
+		return bestSol;
 	}
 
 	private List<Solution> generateNeighbors(Solution curSol) {
