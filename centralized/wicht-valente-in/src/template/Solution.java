@@ -6,6 +6,7 @@ import java.util.List;
 
 import logist.task.Task;
 import logist.task.TaskSet;
+import logist.topology.Topology.City;
 import logist.simulation.Vehicle;
 
 
@@ -18,6 +19,62 @@ public class Solution {
 	//These two are helpers to map between Tasks and TaskActions
 	private HashMap<Task,TaskAction> pickups;
 	private HashMap<Task,TaskAction> deliveries;
+	
+	
+//	public Solution(List<Vehicle> vehicles, TaskSet tasks){
+//		//First build the set of TaskActions
+//		pickups = new HashMap<Task,TaskAction>();
+//		deliveries = new HashMap<Task,TaskAction>();
+//		for (Task t : tasks){
+//			pickups.put(t, new TaskAction(true, t));
+//			deliveries.put(t, new TaskAction(false, t));
+//		}
+//		
+//		//Create structures
+//		nextActionVehicles = new HashMap<Vehicle,TaskAction>();
+//		nextActionTasks = new HashMap<TaskAction,TaskAction>();
+//		time = new HashMap<TaskAction,Integer>();
+//		vehicle = new HashMap<Task,Vehicle>();
+//		
+//		//Helper structures
+//		HashMap<Vehicle,City> posVehicles = new HashMap<Vehicle,City>();
+//		HashMap<Vehicle,TaskAction> lastAction = new HashMap<Vehicle,TaskAction>();
+//		for (Vehicle v : vehicles){
+//			posVehicles.put(v, v.getCurrentCity());
+//			lastAction.put(v, null); 
+//		}
+//		
+//		//For each task assign it to the nearest vehicle
+//		for (Task t : tasks){
+//			double min = Double.MAX_VALUE;
+//			Vehicle argmin = null;
+//			for (Vehicle v : vehicles){
+//				if (posVehicles.get(v).distanceTo(t.pickupCity) < min){
+//					min = posVehicles.get(v).distanceTo(t.pickupCity);
+//					argmin = v;
+//				}
+//			}
+//			//Assign task to v = argmin:
+//			//If argmin has still no tasks
+//			if (lastAction.get(argmin) == null){
+//				nextActionVehicles.put(argmin, pickups.get(t));
+//				nextActionTasks.put(pickups.get(t), deliveries.get(t));
+//				lastAction.put(argmin, deliveries.get(t));
+//				time.put(pickups.get(t), 0);
+//				time.put(deliveries.get(t), 1);
+//				vehicle.put(t, argmin);
+//			}
+//			else{
+//				nextActionTasks.put(lastAction.get(argmin), pickups.get(t));
+//				nextActionTasks.put(pickups.get(t), deliveries.get(t));
+//				time.put(pickups.get(t), time.get(lastAction.get(argmin)));
+//				time.put(deliveries.get(t), time.get(lastAction.get(argmin)));
+//				lastAction.put(argmin, deliveries.get(t));
+//				vehicle.put(t, argmin);
+//			}
+//			
+//		}
+//	}
 
 	/*
 	 * This constructor builds a naive solution by giving everything to the first vehicle

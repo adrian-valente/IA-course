@@ -183,7 +183,7 @@ public class AuctionSimple implements AuctionBehavior {
 			
 			if (curCost < bestCost){
 				bestSol = curSol;
-				curCost = bestCost;
+				bestCost = curCost;
 			}
 		}
 		
