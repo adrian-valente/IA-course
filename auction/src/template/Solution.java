@@ -7,6 +7,7 @@ import java.util.List;
 
 import logist.task.Task;
 import logist.task.TaskSet;
+import logist.topology.Topology.City;
 import logist.simulation.Vehicle;
 
 
@@ -368,6 +369,22 @@ public class Solution {
 			task = getNextAction(task);
 		}
 		return w;
+	}
+	
+	public List<City> lastCities(){
+		List<City> res = new ArrayList<City>();
+		for (Vehicle v : nextActionVehicles.keySet()){
+			if (getNextAction(v) == null)
+				res.add(v.getCurrentCity());
+			else{
+				TaskAction curAction = getNextAction(v);
+				while (getNextAction(curAction) != null){
+					curAction = getNextAction(curAction);
+				}
+				res.add(curAction.city);
+			}
+		}
+		return res;
 	}
 
 

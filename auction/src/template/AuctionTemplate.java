@@ -49,7 +49,7 @@ public class AuctionTemplate implements AuctionBehavior {
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		if (winner == agent.id()) {
 			currentCity = previous.deliveryCity;
-			System.out.println("Task "+previous+" won by "+winner);
+			System.out.println("Task "+previous+" won by AuctionTemplate");
 		}
 	}
 	
@@ -64,14 +64,14 @@ public class AuctionTemplate implements AuctionBehavior {
 				+ currentCity.distanceUnitsTo(task.pickupCity);
 		double marginalCost = Measures.unitsToKM(distanceSum
 				* vehicle.costPerKm());
+		double transportCost = task.pickupCity.distanceTo(task.deliveryCity) * vehicle.costPerKm();
 
 		double ratio = 1.0 + (random.nextDouble() * 0.05 * task.id);
 		double bid = ratio * marginalCost;
 		
-		System.out.println("[Agent "+agent.id()+"] Task "+task+" bid at "+bid);
-		System.out.println("[DEBUG] ratio"+ratio);
-		System.out.println("[Agent "+agent.id()+"] can realise a profit of "+(bid-marginalCost));
-
+		System.out.println("[Agent AuctionTemplate] Task "+task+" bid at "+bid+" cost of "+marginalCost);
+		System.out.println("[Agent AuctionTemplate] can realise a profit of "+(bid-marginalCost));
+		System.out.println("[Agent AuctionTemplate] overhead "+(marginalCost - transportCost));
 		return (long) Math.round(bid);
 	}
 
