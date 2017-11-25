@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import java.util.List;
 
@@ -53,6 +53,7 @@ public class Centralized implements CentralizedBehavior {
 		
 		//Build initial solution
 		Solution curSol = new Solution(vehicles, tasks);
+		System.out.println(curSol);
 		double curCost = curSol.cost();
 		System.out.println(curCost);
 		boolean stop = false;

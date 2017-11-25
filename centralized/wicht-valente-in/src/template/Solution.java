@@ -1,4 +1,4 @@
-package src.template;
+package template;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,47 +31,47 @@ public class Solution {
 		}
 		
 		for(Task t : tasks) {
-			int nV = nearestVehicle(vehicles, t);
+			int nV = (int) Math.floor(Math.random() * vehicles.size());
 			taskActions.get(nV).add(new TaskAction(true, t));
 			taskActions.get(nV).add(new TaskAction(false, t));
 		}
-		
-		List<TaskAction> l;
+		actionsState = buildStateFromLists(taskActions);
+//		List<TaskAction> l;
 		// for each vehicle, shuffle its tasks until we get a legal path (no overweight).
-		for(int i = 0; i < taskActions.size(); ++i) {
-			do {
-				l = taskActions.get(i);
-				Collections.shuffle(l);
-				taskActions.set(i, l);
-				actionsState = buildStateFromLists(taskActions);
-				taskActions = buildListFromStates(actionsState, vehicles.size());
-			}while(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity()));
-		}
+//		for(int i = 0; i < taskActions.size(); ++i) {
+//			do {
+//				l = taskActions.get(i);
+//				Collections.shuffle(l);
+//				taskActions.set(i, l);
+//				actionsState = buildStateFromLists(taskActions);
+//				taskActions = buildListFromStates(actionsState, vehicles.size());
+//			}while(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity()));
+//		}
 		valid = true;
-		if(taskActions.size() != vehicles.size()) {
-			valid = false;
-			return;
-		}
-		for(int i = 0; i < taskActions.size(); ++i) {
-			if(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity())) {
-				valid = false;
-				break;
-			}
-		}
+//		if(taskActions.size() != vehicles.size()) {
+//			valid = false;
+//			return;
+//		}
+//		for(int i = 0; i < taskActions.size(); ++i) {
+//			if(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity())) {
+//				valid = false;
+//				break;
+//			}
+//		}
 	}
 	
 	
 	public Solution(List<List<TaskAction>> tA, List<Vehicle> vehicles) {
 		this.vehicles = vehicles;
 		actionsState = buildStateFromLists(tA);
-		taskActions = buildListFromStates(actionsState, tA.size());
+		taskActions = buildListFromStates(actionsState, vehicles.size());
 		valid = true;
 		if(tA.size() != vehicles.size()) {
 			valid = false;
 			return;
 		}
 		for(int i = 0; i < tA.size(); ++i) {
-			if(! pathIsGood(tA.get(i), vehicles.get(i).capacity())) {
+			if(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity())) {
 				valid = false;
 				break;
 			}
@@ -162,9 +162,6 @@ public class Solution {
 			int pidx = states.get(t)[1];
 			int didx = states.get(t)[2];
 			List<TaskAction> lV = tA.get(vidx);
-			System.out.println(lV.size());
-			System.out.println(pidx);
-			System.out.println(didx);
 			if(pidx < didx) {
 				
 				lV.set(pidx, new TaskAction(true, t));
@@ -173,8 +170,10 @@ public class Solution {
 			else {
 				lV.set(pidx, new TaskAction(false, t));
 				lV.set(didx, new TaskAction(true, t));
+				int[] arr = {vidx,didx,pidx};
+				actionsState.put(t, arr);
 			}
-			tA.set(vidx, lV);
+			//tA.set(vidx, lV);
 		}
 		
 		return tA;
@@ -218,14 +217,15 @@ public class Solution {
 		List<TaskAction> vehicle = new ArrayList<TaskAction>(taskActions.get(v));
 		vehicle.remove(d);
 		vehicle.remove(p);
-		taskActions.set(v, vehicle);
+		//taskActions.set(v, vehicle);
 		
 		List<Solution> solutions = new ArrayList<Solution>();
 		//try to put it in each other vehicle
-		for(int i = 0; i < taskActions.size(); ++i) {
+		for(int i = 0; i < vehicles.size(); ++i) {
 			List<List<TaskAction>> tA = new ArrayList<List<TaskAction>>(taskActions);
+			tA.set(v, vehicle);
 			if(t.weight < vehicles.get(i).capacity() && i != v) {
-				List<TaskAction> a = tA.get(i);
+				List<TaskAction> a = new ArrayList<TaskAction>(tA.get(i));
 				a.add(0, new TaskAction(false, t));
 				a.add(0, new TaskAction(true, t));
 				tA.set(i, a);
@@ -246,7 +246,7 @@ public class Solution {
 			
 			for(int i = 0; i < taskActions.get(v).size(); ++i) {
 				for(int j = i; j < taskActions.get(v).size(); ++j) {
-					List<TaskAction> list = taskActions.get(v);
+					List<TaskAction> list = new ArrayList<TaskAction>(taskActions.get(v));
 					TaskAction t1 = taskActions.get(v).get(i);
 					TaskAction t2 = taskActions.get(v).get(j);
 					list.set(i, t2);
@@ -294,6 +294,19 @@ public class Solution {
 		}
 		solutions.addAll(permutations());
 		return solutions;
+	}
+	
+	public String toString(){
+		String res = "";
+		int i = 0;
+		for (List<TaskAction> l : taskActions){
+			res += "\n\nVEHICLE "+i;
+			for (TaskAction t : l){
+				res += "\n      "+t;
+			}
+			i++;
+		}
+		return res;
 	}
 
 }
