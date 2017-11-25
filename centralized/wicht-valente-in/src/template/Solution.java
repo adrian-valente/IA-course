@@ -84,7 +84,7 @@ public class Solution {
 			City last = vehicles.get(i).getCurrentCity();
 			for(int j = 0; j < taskActions.get(i).size(); ++j) {
 				City city = taskActions.get(i).get(j).city;
-				c += last.distanceTo(city);
+				c += last.distanceTo(city) * vehicles.get(i).costPerKm();
 				last = city;
 			}
 		}

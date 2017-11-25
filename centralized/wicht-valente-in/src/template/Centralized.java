@@ -49,38 +49,54 @@ public class Centralized implements CentralizedBehavior {
 
 	@Override
 	public List<Plan> plan(List<Vehicle> vehicles, TaskSet tasks) {
-		long debut = System.currentTimeMillis();
-		
+		long start = System.currentTimeMillis();
 		//Build initial solution
-		Solution curSol = new Solution(vehicles, tasks);
-		System.out.println(curSol);
-		double curCost = curSol.cost();
-		System.out.println(curCost);
+		Solution curSol = null;
+		double curCost = 0;
+		Solution bestSol = null;
+		double bestCost = Double.MAX_VALUE;
 		boolean stop = false;
 		int nTries = 0;
 		int iterations = 0;
 		
-		while(!stop){
-			List<Solution> neighbors = curSol.generateNeighbors();
-			iterations++;
-			//Get the best solution:
-			double min = Double.MAX_VALUE;
-			Solution argmin = null;
-
-			for (Solution sol : neighbors){
-				if (sol.cost() < min){
-					min = sol.cost();
-					argmin = sol;
+		while (System.currentTimeMillis() - start < this.timeout_plan - 1000){
+			stop = false;
+			curSol = new Solution(vehicles, tasks);
+			curCost = curSol.cost();
+			
+			while(!stop && (System.currentTimeMillis() - start < this.timeout_plan - 1000)){
+				List<Solution> neighbors = curSol.generateNeighbors();
+				iterations++;
+				//Get the best solution:
+				double min = Double.MAX_VALUE;
+				Solution argmin = null;
+	
+				for (Solution sol : neighbors){
+					if (sol.cost() < min){
+						min = sol.cost();
+						argmin = sol;
+					}
+				}
+				if (min >= curCost){
+					nTries++;
+					if (nTries >= NMAX)
+						stop = true;
+				} else {
+					System.out.println(min);
+					curCost = min;
+					curSol = argmin;
+					nTries = 0;
 				}
 			}
-			System.out.println(min);
-			if (min >= curCost){
-				stop = true;
-			} else {
-				curCost = min;
-				curSol = argmin;
+			
+			if (curCost < bestCost){
+				bestSol = curSol;
+				bestCost = curCost;
 			}
 		}
+		
+		curSol = bestSol;
+		curCost = bestCost;
 		
 		List<Plan> plans = curSol.generatePlan();
 		
@@ -89,7 +105,7 @@ public class Centralized implements CentralizedBehavior {
 		System.out.println("Costs per vehicle: ");
 		
 		System.out.println("\n"+iterations+" iterations");
-		System.out.println("Computation time: "+(System.currentTimeMillis() - debut));
+		System.out.println("Computation time: "+(System.currentTimeMillis() - start));
 		return plans;
 	}
 }
