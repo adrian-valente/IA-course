@@ -1,4 +1,4 @@
-package template;
+package src.template;
 
 import logist.task.Task;
 import logist.topology.Topology.City;

@@ -1,373 +1,299 @@
-package template;
+package src.template;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import logist.task.Task;
-import logist.task.TaskSet;
+import logist.plan.Plan;
 import logist.simulation.Vehicle;
-
+import logist.task.Task;
+import logist.topology.Topology.City;
 
 public class Solution {
-
-	private HashMap<Vehicle,TaskAction> nextActionVehicles;
-	private HashMap<TaskAction,TaskAction> nextActionTasks;
-	private HashMap<TaskAction,Integer> time;
-	private HashMap<Task,Vehicle> vehicle;
-	//These two are helpers to map between Tasks and TaskActions
-	private HashMap<Task,TaskAction> pickups;
-	private HashMap<Task,TaskAction> deliveries;
-
-	/*
-	 * This constructor builds a naive solution by giving everything to the first vehicle
-	 * in naive order
-	 */
-	public Solution(List<Vehicle> vehicles, TaskSet tasks){
-		//First build the set of TaskActions
-		pickups = new HashMap<Task,TaskAction>();
-		deliveries = new HashMap<Task,TaskAction>();
-		for (Task t : tasks){
-			pickups.put(t, new TaskAction(true, t));
-			deliveries.put(t, new TaskAction(false, t));
+	
+	//Task -> [vehicleNB, pickup position, delivery position]
+	private Map<Task, int[]> actionsState;
+	private List<List<TaskAction>> taskActions;
+	private List<Vehicle> vehicles;
+	boolean valid;
+	
+	public Solution(List<Vehicle> vehicles, Collection<Task> tasks) {
+		actionsState = new HashMap<Task, int[]>();
+		taskActions = new ArrayList<List<TaskAction>>();
+		this.vehicles = vehicles;
+		
+		for (int i = 0; i < vehicles.size(); i++) {
+			taskActions.add(new ArrayList<TaskAction>());
 		}
-
-		//Then give everything in order to the first vehicle
-		//Building HashMaps
-		nextActionVehicles = new HashMap<Vehicle,TaskAction>();
-		nextActionTasks = new HashMap<TaskAction,TaskAction>();
-		time = new HashMap<TaskAction,Integer>();
-		vehicle = new HashMap<Task,Vehicle>();
-		//Putting tasks
-		//First task is different : we first map from Vehicle to TaskAction
-		List<List<Task>> divided = divideTasks(tasks, vehicles.size());
-
-		for(int j = 0; j< vehicles.size(); j++) {
-			List<Task> tasksList = divided.get(j);
-			if(tasksList.size() == 0) {
-				continue;
-			}
-			Vehicle v = vehicles.get(j);
-			TaskAction curAction = pickups.get(tasksList.get(0));
-			this.putNextAction(v, curAction);
-			time.put(curAction, new Integer(0));
-			vehicle.put(curAction.task, v);
-
-			this.putNextAction(curAction, deliveries.get(tasksList.get(0)));
-			curAction = deliveries.get(tasksList.get(0));
-			time.put(curAction, new Integer(1));
-			vehicle.put(curAction.task, v);
-
-			for (int i=1; i<tasksList.size(); i++){
-				this.putNextAction(curAction, pickups.get(tasksList.get(i)));
-				curAction = pickups.get(tasksList.get(i));
-				time.put(curAction, new Integer(2*i));
-				vehicle.put(curAction.task, v);
-
-				this.putNextAction(curAction, deliveries.get(tasksList.get(i)));
-				curAction = deliveries.get(tasksList.get(i));
-				time.put(curAction, new Integer(2*i+1));
-				vehicle.put(curAction.task, v);
+		
+		for(Task t : tasks) {
+			int nV = nearestVehicle(vehicles, t);
+			taskActions.get(nV).add(new TaskAction(true, t));
+			taskActions.get(nV).add(new TaskAction(false, t));
+		}
+		
+		List<TaskAction> l;
+		// for each vehicle, shuffle its tasks until we get a legal path (no overweight).
+		for(int i = 0; i < taskActions.size(); ++i) {
+			do {
+				l = taskActions.get(i);
+				Collections.shuffle(l);
+				taskActions.set(i, l);
+				actionsState = buildStateFromLists(taskActions);
+				taskActions = buildListFromStates(actionsState, vehicles.size());
+			}while(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity()));
+		}
+		valid = true;
+		if(taskActions.size() != vehicles.size()) {
+			valid = false;
+			return;
+		}
+		for(int i = 0; i < taskActions.size(); ++i) {
+			if(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity())) {
+				valid = false;
+				break;
 			}
 		}
-
-	}
-
-	/*
-	 * This constructor creates a copy of a Solution instance
-	 */
-	public Solution(Solution sol){
-		this.nextActionVehicles = new HashMap<Vehicle,TaskAction>(sol.getNextActionVehicles());
-		this.nextActionTasks = new HashMap<TaskAction,TaskAction>(sol.getNextActionTasks());
-		this.time = new HashMap<TaskAction,Integer>(sol.getTime());
-		this.vehicle = new HashMap<Task,Vehicle>(sol.getVehicle());
-		this.pickups = sol.getPickups();
-		this.deliveries = sol.getDeliveries();
-	}
-
-	/*
-	 * Compute the cost of an solution
-	 */
-	public double cost(){
-		double cost = 0.;
-		for (Vehicle v : this.nextActionVehicles.keySet()){
-			TaskAction curAction = nextActionVehicles.get(v);
-			if (curAction == null)
-				continue;
-			cost += v.getCurrentCity().distanceTo(curAction.city) * v.costPerKm();
-			TaskAction nextAction = this.nextActionTasks.get(curAction);
-			while (nextAction != null){
-				cost += curAction.city.distanceTo(nextAction.city) * v.costPerKm();
-				curAction = nextAction;
-				nextAction = this.nextActionTasks.get(curAction);
-			}
-		}
-		return cost;
 	}
 	
-	public double[] costsperVehicle(){
-		double[] costs = new double[nextActionVehicles.size()];
-		int i = 0;
-		for (Vehicle v : this.nextActionVehicles.keySet()){
-			double cost = 0.;
-			TaskAction curAction = nextActionVehicles.get(v);
-			if (curAction == null)
-				continue;
-			cost += v.getCurrentCity().distanceTo(curAction.city);
-			TaskAction nextAction = this.nextActionTasks.get(curAction);
-			while (nextAction != null){
-				cost += curAction.city.distanceTo(nextAction.city);
-				curAction = nextAction;
-				nextAction = this.nextActionTasks.get(curAction);
-			}
-			costs[i] = cost;
-			i++;
+	
+	public Solution(List<List<TaskAction>> tA, List<Vehicle> vehicles) {
+		this.vehicles = vehicles;
+		actionsState = buildStateFromLists(tA);
+		taskActions = buildListFromStates(actionsState, tA.size());
+		valid = true;
+		if(tA.size() != vehicles.size()) {
+			valid = false;
+			return;
 		}
-		return costs;
-	}
-
-
-
-	/*
-	 * GETTERS AND SETTERS
-	 */
-
-	public TaskAction getNextAction(Vehicle v){
-		return nextActionVehicles.get(v);
-	}
-
-	public TaskAction getNextAction(TaskAction t){
-		return nextActionTasks.get(t);
-	}
-
-	public void putNextAction(Vehicle v, TaskAction t){
-		this.nextActionVehicles.put(v,t);
-	}
-
-	public void putNextAction(TaskAction t1, TaskAction t2){
-		this.nextActionTasks.put(t1,t2);
-	}
-
-	public HashMap<Vehicle, TaskAction> getNextActionVehicles() {
-		return nextActionVehicles;
-	}
-
-	public HashMap<TaskAction, TaskAction> getNextActionTasks() {
-		return nextActionTasks;
-	}
-
-	public HashMap<TaskAction, Integer> getTime() {
-		return time;
-	}
-
-	public HashMap<Task, Vehicle> getVehicle() {
-		return vehicle;
-	}
-
-	public HashMap<Task, TaskAction> getPickups() {
-		return pickups;
-	}
-
-	public HashMap<Task, TaskAction> getDeliveries() {
-		return deliveries;
-	}
-
-
-	/**
-	 * Functions to help generate neighbors
-	 */
-	/*
-	 * This function moves the task t from vehicle vsrc to the beginning of the 
-	 * plan for vehicle vdest
-	 */
-	public boolean changeVehicle(Task t, Vehicle vsrc, Vehicle vdest){
-		if (t.weight > vdest.capacity()){
-			return false;
-		}
-
-		//First look for the pickup of the required task
-		TaskAction curAction = getNextAction(vsrc);
-		TaskAction prevAction = null;
-		while (! (curAction.task.equals(t) && curAction.is_pickup)){
-			prevAction = curAction;
-			curAction = getNextAction(curAction);
-		}
-		//We found it: so we make the necessary changes to the nextAction table
-		TaskAction tmpAction = getNextAction(curAction); //the action 
-		//following curAction in vsrc's plan: we will need it later
-		if (prevAction == null){
-			putNextAction(vsrc,tmpAction);
-		} else {
-			putNextAction(prevAction,tmpAction);
-		}
-		putNextAction(curAction,getNextAction(vdest));
-		putNextAction(vdest,curAction);
-		//We must also update the time table for all following actions
-		time.put(curAction, 0);
-		curAction = tmpAction;
-		while(curAction != null){
-			time.put(curAction, time.get(curAction) - 1);
-			curAction = getNextAction(curAction);
-		}
-
-		//Now we start looking for the delivery action of the required task (should be
-		//after the pickup)
-		curAction = tmpAction;
-		while (! (curAction.task.equals(t) && !curAction.is_pickup)){
-			prevAction = curAction;
-			curAction = getNextAction(curAction);
-		}
-		//We found it: we insert it in the second position of the plan of vdest
-		if (prevAction == null){
-			putNextAction(vsrc,getNextAction(curAction));
-		} else {
-			putNextAction(prevAction,getNextAction(curAction));
-		}
-		tmpAction = getNextAction(curAction);
-		putNextAction(curAction,getNextAction(getNextAction(vdest)));
-		putNextAction(getNextAction(vdest),curAction);
-		time.put(curAction, 1);
-		curAction = tmpAction;
-		while(curAction != null){
-			time.put(curAction, time.get(curAction) - 1);
-			curAction = getNextAction(curAction);
-		}
-		curAction = getNextAction(getNextAction(getNextAction(vdest)));
-		while(curAction != null){
-			time.put(curAction, time.get(curAction) + 2);
-			curAction = getNextAction(curAction);
-		}
-
-		//Finally, we need to update the vehicle table
-		vehicle.put(t, vdest);
-
-		return true;
-
-	}
-
-	/*
-	 * Function to permute two actions in the plan of vehicle v
-	 * Returns true if this permutation is in agreement with the constraints, false otherwise
-	 * Very important: we assume time(a1) < time(a2) !! 
-	 */
-	public boolean permuteActions(Vehicle v, TaskAction a1, TaskAction a2){
-		//We first verify the integrity of the desired permutation:
-		if (a1.task.equals(a2.task)){
-			return false;
-		}
-		if (a1.is_pickup){
-			if (time.get(deliveries.get(a1.task)) < time.get(a2)){
-				return false;
-			}
-			if(weightAtTime(time.get(a2), v) + a1.task.weight > v.capacity()) {
-				return false;
+		for(int i = 0; i < tA.size(); ++i) {
+			if(! pathIsGood(tA.get(i), vehicles.get(i).capacity())) {
+				valid = false;
+				break;
 			}
 		}
-		else {
-			//Nothing to check if a1 is a delivery
-		}
-		if (a2.is_pickup){
-			if(weightAtTime(time.get(a1), v) + a2.task.weight > v.capacity()) {
-				return false;
+	}
+	
+	public double cost() {
+		double c = 0.;
+		for(int i = 0; i < vehicles.size(); ++i) {
+			City last = vehicles.get(i).getCurrentCity();
+			for(int j = 0; j < taskActions.get(i).size(); ++j) {
+				City city = taskActions.get(i).get(j).city;
+				c += last.distanceTo(city);
+				last = city;
 			}
 		}
-		else {
-			if (time.get(pickups.get(a2.task)) > time.get(a1)){
-				return false;
-			}
-		}
-
-		TaskAction prevAction1 = null;
-		TaskAction nextAction1 = null;
-		TaskAction prevAction2 = null;
-		TaskAction nextAction2 = null;
-		TaskAction curAction = getNextAction(v);
-		TaskAction prevAction = null;
-
-		//Find the two actions and the actions surrounding them
-		boolean found1 = false;
-		boolean found2 = false;
-		while(!found1 || !found2){
-			if (curAction.equals(a1)){
-				prevAction1 = prevAction;
-				nextAction1 = getNextAction(curAction);
-				found1 = true;
-			}
-			if (curAction.equals(a2)){
-				prevAction2 = prevAction;
-				nextAction2 = getNextAction(curAction);
-				found2 = true;
-			}
-
-			prevAction = curAction;
-			curAction = getNextAction(curAction);
-		}
-
-		//Now we proceed to the permutation:
-		if (prevAction1 == null){ //in case a1 is the first action
-			putNextAction(v, a2);
-		} else {
-			putNextAction(prevAction1, a2);
-		}
-		if(nextAction1.equals(a2)) {  //in case a1 and a2 follow each other
-			putNextAction(a2,a1);
-		}
-		else {
-			putNextAction(a2, nextAction1);
-			putNextAction(prevAction2, a1);
-		}
-		putNextAction(a1, nextAction2);
-		//update time
-		int tmp = time.get(a1);
-		time.put(a1, time.get(a2));
-		time.put(a2, tmp);
-
-		//Finally, check weights
-		curAction = getNextAction(v);
+		return c;
+	}
+	
+	
+	private boolean pathIsGood(List<TaskAction> tA, int vW) {
 		int w = 0;
-		while (curAction != null){
-			if (curAction.is_pickup){
-				w += curAction.task.weight;
-			} else {
-				w -= curAction.task.weight;
+		for(TaskAction t : tA) {
+			if(t.is_pickup) {
+				w += t.task.weight;
 			}
-			if (w > v.capacity()){
+			else {
+				w -= t.task.weight;
+			}
+			if(w > vW) {
 				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	private Map<Task, int[]> buildStateFromLists(List<List<TaskAction>> taskActions) {
+		
+		int[] def = new int[] {-1,-1,-1};
+		// Create empty:
+		Map<Task, int[]> tA = new HashMap<Task, int[]>();
+		for(int v = 0; v < taskActions.size(); ++v) {
+			for(int a = 0; a < taskActions.get(v).size(); ++a) {
+				TaskAction ta = taskActions.get(v).get(a);
+				if(ta.is_pickup) {
+					int d = tA.getOrDefault(ta.task, def)[2];
+					tA.put(ta.task, new int[]{v,a,d});
+							
+				}
+				else {
+					int d = tA.getOrDefault(ta.task, def)[1];
+					tA.put(ta.task, new int[]{v,d,a});
+				}
+			}
+		}
+		return tA;
+		
+	}
+	
+	
+	private List<List<TaskAction>> buildListFromStates(Map<Task, int[]> states, int nV){
+		int[] taskperV = new int[nV];
+		for(int i = 0; i < nV; ++i) {
+			taskperV[i] = 0;
+		}
+		// compute number of taskActions per vehicle
+		for(Task t : states.keySet()) {
+			taskperV[states.get(t)[0]] += 2;
+		}
+		
+		
+		List<List<TaskAction>> tA = new ArrayList<List<TaskAction>>();
+		//initialize vehicule lists with null values
+		for(int i = 0; i < taskperV.length; ++i) {
+			int p = 0;
+			ArrayList<TaskAction> list = new ArrayList<TaskAction>();
+			while(p < taskperV[i]) {
+				list.add(null);
+				++p;
+			}
+			tA.add(list);
+		}
+		
+		//construct the list in placing each taskAction at its place, controlling that a delivery happens after a pickup
+		for(Task t : states.keySet()) {
+			int vidx = states.get(t)[0];
+			int pidx = states.get(t)[1];
+			int didx = states.get(t)[2];
+			List<TaskAction> lV = tA.get(vidx);
+			System.out.println(lV.size());
+			System.out.println(pidx);
+			System.out.println(didx);
+			if(pidx < didx) {
+				
+				lV.set(pidx, new TaskAction(true, t));
+				lV.set(didx, new TaskAction(false, t));
+			}
+			else {
+				lV.set(pidx, new TaskAction(false, t));
+				lV.set(didx, new TaskAction(true, t));
+			}
+			tA.set(vidx, lV);
+		}
+		
+		return tA;
+	}
+	
+	
+	private int nearestVehicle(List<Vehicle> vehicles, Task t) {
+		int nearest = 0;
+		double dist = vehicles.get(nearest).getCurrentCity().distanceTo(t.pickupCity);
+		if(vehicles.size() == 1) {
+			return 0;
+		}
+		for(int i = 1; i < vehicles.size(); ++i) {
+			double d = vehicles.get(i).getCurrentCity().distanceTo(t.pickupCity);
+			if(d < dist) {
+				dist = d;
+				nearest = i;
 			}
 		}
 		
-		return true;
-	}
-
-	private List<List<Task>> divideTasks(TaskSet tasks, int i){
-		List<List<Task>> res = new ArrayList<List<Task>>();
-		for(int j = 0; j< i; ++j) {
-			res.add(new ArrayList<Task>());
+		// check that nearest vehicle has enough capacity
+		if(vehicles.get(nearest).capacity() < t.weight) {
+			for(int i = 0; i < vehicles.size(); ++i) {
+				if(vehicles.get(i).capacity() < t.weight) {
+					nearest = i;
+					break;
+				}
+			}
 		}
-
-		for(Task t: tasks) {
-			int pos = (int) Math.round(Math.floor(Math.random()*i));
-			res.get(pos).add(t);
-		}
-		return res;
+		
+		return nearest;
 	}
 	
-	private int weightAtTime(int t, Vehicle v) {
-		int i = 0;
-		TaskAction task = getNextAction(v);
-		int w = 0;
-		while(i < t) {
-			if(task.is_pickup) {
-				w += task.task.weight;
+	public List<Solution> changeVehicule(Task t){
+		
+		int v = actionsState.get(t)[0];
+		int p = actionsState.get(t)[1];
+		int d = actionsState.get(t)[2];
+		
+		// Remove from current vehicle
+		List<TaskAction> vehicle = new ArrayList<TaskAction>(taskActions.get(v));
+		vehicle.remove(d);
+		vehicle.remove(p);
+		taskActions.set(v, vehicle);
+		
+		List<Solution> solutions = new ArrayList<Solution>();
+		//try to put it in each other vehicle
+		for(int i = 0; i < taskActions.size(); ++i) {
+			List<List<TaskAction>> tA = new ArrayList<List<TaskAction>>(taskActions);
+			if(t.weight < vehicles.get(i).capacity() && i != v) {
+				List<TaskAction> a = tA.get(i);
+				a.add(0, new TaskAction(false, t));
+				a.add(0, new TaskAction(true, t));
+				tA.set(i, a);
+				Solution sol = new Solution(tA, vehicles);
+				if(sol.valid) {
+					solutions.add(sol);
+				}
 			}
-			else {
-				w -= task.task.weight;
-			}
-			++i;
-			task = getNextAction(task);
 		}
-		return w;
+		return solutions;
 	}
+	
+	private List<Solution> permutations(){
+		List<Solution> solutions = new ArrayList<Solution>();
+		
+		for(int v = 0; v < taskActions.size(); ++v) {
+			List<List<TaskAction>> tA = new ArrayList<List<TaskAction>>(taskActions);
+			
+			for(int i = 0; i < taskActions.get(v).size(); ++i) {
+				for(int j = i; j < taskActions.get(v).size(); ++j) {
+					List<TaskAction> list = taskActions.get(v);
+					TaskAction t1 = taskActions.get(v).get(i);
+					TaskAction t2 = taskActions.get(v).get(j);
+					list.set(i, t2);
+					list.set(j, t1);
+					tA.set(v, list);
+					Solution sol = new Solution(tA, vehicles);
+					if(sol.valid) {
+						solutions.add(sol);
+					}
+				}
+			}
+		}
+		return solutions;
+	}
+	
+	public List<Plan> generatePlan(){
+		List<Plan> plans = new ArrayList<Plan>();
+		for (int i = 0; i < taskActions.size(); ++i) {
+			Vehicle v = vehicles.get(i);
+			City curCity = v.getCurrentCity();
+			Plan plan = new Plan(curCity);
+			List<TaskAction> tActions = taskActions.get(i);
+			for(TaskAction ta : tActions) {
+				for (City c : curCity.pathTo(ta.city)){
+					plan.appendMove(c);
+				}
 
+				if (ta.is_pickup){
+					plan.appendPickup(ta.task);
+				} else {
+					plan.appendDelivery(ta.task);
+				}
+				curCity = ta.city;
+			}
+			plans.add(plan);
+		}
+		return plans;
+	}
+	
+	public List<Solution> generateNeighbors(){
+		List<Solution> solutions = new ArrayList<Solution>();
+		Set<Task> tasks = actionsState.keySet();
+		for(Task t: tasks) {
+			solutions.addAll(changeVehicule(t));
+		}
+		solutions.addAll(permutations());
+		return solutions;
+	}
 
 }
