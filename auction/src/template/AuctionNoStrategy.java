@@ -22,26 +22,20 @@ import logist.topology.Topology.City;
 
 
 @SuppressWarnings("unused")
-public class AuctionSimple implements AuctionBehavior {
+public class AuctionNoStrategy implements AuctionBehavior {
 
 	private Topology topology;
 	private TaskDistribution distribution;
 	private Agent agent;
 	private Random random;
-	private double ratio;
 	private static double alpha = 0.3;
-	private static double G = 50.;
-	private int remainingTasks;
-	private double curCost;   //The cost of the current solution
-	private double curMoney;  //The money earned so far
+	private double ratio;
+	private double curCost;
 	private List<Task> tasks;  //The tasks that have been attributed to us
-	private List<City> usableCities;  //The last city visited by each vehicle
 	
 	//Variables linked to the last bid (to help in auctionResult)
 	private double lastBid_cost;
-	private double lastBid_value;
-	private boolean lastBid_ratioUsed;
-	private List<City> lastBid_usableCities;
+	private double lastBid_value;	
 	
 	//timeouts
 	private long timeout_bid;
@@ -57,16 +51,9 @@ public class AuctionSimple implements AuctionBehavior {
 		this.distribution = distribution;
 		System.out.println(distribution);
 		this.agent = agent;
-		this.ratio = 1.3;
-		this.remainingTasks = 19;
+		this.ratio = 1.2;
 		this.curCost = 0.;
-		this.curMoney = 0.;
 		this.tasks = new ArrayList<Task>();
-		this.usableCities = new ArrayList<City>();
-		for (Vehicle v : agent.vehicles()){
-			System.out.println(v.getCurrentCity());
-			this.usableCities.add(v.getCurrentCity());
-		}
 		
 		// this code is used to get the timeouts
         LogistSettings ls = null;
@@ -87,11 +74,9 @@ public class AuctionSimple implements AuctionBehavior {
 	@Override
 	public void auctionResult(Task previous, int winner, Long[] bids) {
 		if (winner == agent.id()) {
-			curCost = lastBid_cost;
-			curMoney += lastBid_value;
 			tasks.add(previous);
-			usableCities = lastBid_usableCities;
-			System.out.println("Task "+previous+" won by AuctionSimple");
+			curCost = lastBid_cost;
+			System.out.println("Task "+previous+" won by AuctionNoStrategy");
 		}
 		
 		//Get the best bid (except for ours)
@@ -100,19 +85,8 @@ public class AuctionSimple implements AuctionBehavior {
 			if (bid < bestBid && bid != ((long)Math.round(lastBid_value)))
 				bestBid = bid;
 		}
-		if (this.lastBid_ratioUsed)
-			this.ratio = Math.min(Math.max((alpha * (((double)bestBid) / lastBid_value)) + ((1. - alpha) * this.ratio), 1.05), 1.6);
-	}
-	
-	public double computeProbaGoodTask(City objectiveCity){
-		double sum = 0.;
-		for (int i=0; i<this.usableCities.size(); i++){
-			City c = usableCities.get(i);
-			if (c == null)
-				c = agent.vehicles().get(i).getCurrentCity();
-			sum += this.distribution.probability(c, objectiveCity);
-		}
-		return 1. - Math.pow((1.-sum), remainingTasks);
+		
+		this.ratio = Math.min(Math.max((alpha * (((double)bestBid) / lastBid_cost)) + ((1. - alpha) * this.ratio), 1.01), 1.6);
 	}
 	
 	@Override
@@ -126,41 +100,18 @@ public class AuctionSimple implements AuctionBehavior {
 		//Definition of costs
 		this.lastBid_cost = bestSolution.cost();
 		double marginalCost = this.lastBid_cost - this.curCost;
-		double transportCost = task.pathLength() * agent.vehicles().get(0).costPerKm();
 
 		//Estimating the bid
-		double bid;
-		double minBid = 0.;
-		double probaGoodTask = -1.;
-		if (marginalCost <= transportCost){
-			if (remainingTasks >= 0){
-				bid = transportCost ;
-				this.lastBid_ratioUsed = false;
-			} else{
-				bid = ratio * ((marginalCost<=0)? 100 : marginalCost);
-				this.lastBid_ratioUsed = true;
-			}
-		}
-		else{
-			if (remainingTasks > 0){
-				probaGoodTask = computeProbaGoodTask(task.pickupCity); 
-				minBid = G + (transportCost * probaGoodTask) + (marginalCost * (1. - probaGoodTask));
-			} else 
-				minBid = marginalCost;
-			bid = ratio * minBid;
-			this.lastBid_ratioUsed = true;
-		}
+		double bid = ratio * marginalCost;
+		if (marginalCost <= 0)
+			bid = 100;
 		
 		//Updating attributes
 		this.lastBid_value = bid;
-		this.lastBid_usableCities = bestSolution.lastCities();
-		this.remainingTasks--;
 		
 		
-		System.out.println("[Agent AuctionSimple] Task "+task+" bid at "+bid+" cost of "+marginalCost);
-		System.out.println("[Agent AuctionSimple] overhead "+(marginalCost - transportCost));
-		System.out.println("[Agent AuctionSimple] MinBid "+minBid+"   ratio "+((this.lastBid_ratioUsed)?ratio:1.)+"    probaGoodTask"+probaGoodTask);
-		System.out.println("[Agent AuctionSimple] can realise a profit of "+(bid-marginalCost));
+		System.out.println("[Agent AuctionNoStrategy] Task "+task+" bid at "+bid+" cost of "+marginalCost);
+		System.out.println("[Agent AuctionNoStrategy] can realise a profit of "+(bid-marginalCost));
 		
 
 		return (long) Math.round(bid);
@@ -175,10 +126,6 @@ public class AuctionSimple implements AuctionBehavior {
 		//Finally, convert between Solution and Plan classes
 		List<Plan> plans = curSol.generatePlan();
 	
-		System.out.println("Final solution:");
-		System.out.println("Cost: "+curSol.cost());
-		System.out.println("Money earned: "+curMoney);
-		System.out.println("Computation time: "+(System.currentTimeMillis() - debut));
 		return plans;
 	}
 	

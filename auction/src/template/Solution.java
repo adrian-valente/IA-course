@@ -34,28 +34,7 @@ public class Solution {
 			taskActions.get(nV).add(new TaskAction(false, t));
 		}
 		actionsState = buildStateFromLists(taskActions);
-//		List<TaskAction> l;
-		// for each vehicle, shuffle its tasks until we get a legal path (no overweight).
-//		for(int i = 0; i < taskActions.size(); ++i) {
-//			do {
-//				l = taskActions.get(i);
-//				Collections.shuffle(l);
-//				taskActions.set(i, l);
-//				actionsState = buildStateFromLists(taskActions);
-//				taskActions = buildListFromStates(actionsState, vehicles.size());
-//			}while(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity()));
-//		}
 		valid = true;
-//		if(taskActions.size() != vehicles.size()) {
-//			valid = false;
-//			return;
-//		}
-//		for(int i = 0; i < taskActions.size(); ++i) {
-//			if(! pathIsGood(taskActions.get(i), vehicles.get(i).capacity())) {
-//				valid = false;
-//				break;
-//			}
-//		}
 	}
 	
 	
